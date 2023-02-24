@@ -19,6 +19,7 @@
 #include <SPI.h>
 #include <Adafruit_DotStar.h>
 #include <string.h>
+#include "TOF_protocol.h"
 
 #define NUMPIXELS 4 // Number of LEDs in strip
 
@@ -65,7 +66,7 @@ void send_histogram()
   int i;
   
   // copy msg_type and data_length into message
-  strcpy(smsg, "2,11,");    
+  sprintf(smsg, "%d,11,", TOF_RIO_msgs_enum::HISTOGRAM);    
   for(i = 0; i < 11; i++) {
     sprintf(stemp, "%d", histogram[i]);
     strcat(smsg, stemp);
@@ -132,17 +133,17 @@ void send_range()
   }
 
   if(hist_in_range > 30) {
-    target_range_determination = 1;
+    target_range_determination = target_range_enum::TARGET_IN_RANGE;
     target_range = calc_range(4,5);
   } else if(hist_close > 30) {
-    target_range_determination = 3;
+    target_range_determination = target_range_enum::TARGET_TOO_CLOSE;
     target_range = calc_range(0,3);
   } else {
-    target_range_determination = 2;
+    target_range_determination = target_range_enum::TARGET_TOO_FAR;
     target_range = calc_range(6,10);
   }
 
-  sprintf(smsg, "1,2,%d,%d\r\n", target_range_determination, target_range);
+  sprintf(smsg, "%d,2,%d,%d\r\n", TOF_RIO_msgs_enum::RANGE, target_range_determination, target_range);
   Serial.print(smsg);
 }
 
