@@ -38,6 +38,7 @@ long measurementStartTime = 0; // Used to calculate actual output rate
 
 int histogram[11];
 
+//ok to change this tolerace over distance tolerance?
 void setColor(int index, int val) {
   // index is the index of the LED, from 0 to 3
   // val is the histogram count
@@ -133,8 +134,17 @@ void loop()
               histogram[i]++;
             }
           }
-          // Serial.print(measurementData.distance_mm[x + y]);
-          // Serial.print(",");
+          //two lines below previously uncommented
+          Serial.print(measurementData.distance_mm[x + y]); //print out histogram data -- Linda
+          Serial.print(",");
+          //--cone
+          // 1st element - 0-5
+          // 2nd element - 10-20
+          // 3rd element - 40-50 
+          //--no cone
+          // 1st element - 0
+          // 2nd element - 0
+          // 3rd element - 10-20
         }
       }
 
@@ -147,11 +157,17 @@ void loop()
       Serial.println();
 
       // light some leds
-      setColor(0, histogram[3]); // 300 mm <= dist < 400 mm
-      setColor(1, histogram[4]); // 400 mm <= dist < 500 mm
-      setColor(2, histogram[5]); // 500 mm <= dist < 600 mm
-      setColor(3, histogram[6]); // 600 mm <= dist < 700 mm
+      setColor(0, histogram[1]); // 300 mm <= dist < 400 mm
+      setColor(1, histogram[2]); // 400 mm <= dist < 500 mm
+      setColor(2, histogram[3]); // 500 mm <= dist < 600 mm
+      //setColor(3, histogram[4]); // 600 mm <= dist < 700 mm
+      setColor(3, histogram[4]); //cone or no cone
       strip.show();                     // Refresh strip
+      //originally 3, 4, 5, 6
+
+      //radius of cone @ 4 in above ground is 2.5 in
+      //length of arm (sensor to center of cymbals) is 10 in
+      //sensor needs to be at 7.5 inch line on a ruler
 
       // Uncomment to display actual measurement rate
       // measurements++;
