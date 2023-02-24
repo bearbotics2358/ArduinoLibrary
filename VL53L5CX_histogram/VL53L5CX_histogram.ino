@@ -16,6 +16,7 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_DotStar.h>
+#include <string.h>
 
 #define NUMPIXELS 4 // Number of LEDs in strip
 
@@ -108,6 +109,8 @@ void setup()
 void loop()
 {
   int i;
+  char stemp[256];
+  char smsg[256];
   
   // Poll sensor for new data
   if (myImager.isDataReady() == true)
@@ -138,14 +141,21 @@ void loop()
         }
       }
 
+      strcpy(smsg, "2,11,");    
       for(i = 0; i < 11; i++) {
-        Serial.print(histogram[i]);
+        // Serial.print(histogram[i]);
+        sprintf(stemp, "%d", histogram[i]);
+        strcat(smsg, stemp);
         if(i < 10) {
-          Serial.print(",");
+          // Serial.print(",");
+          strcat(smsg, ",");
+        } else {
+          strcat(smsg, "\r\n");
         }
       }
-      Serial.println();
-
+      // Serial.println();
+      Serial.print(smsg);
+      
       // light some leds
       setColor(0, histogram[3]); // 300 mm <= dist < 400 mm
       setColor(1, histogram[4]); // 400 mm <= dist < 500 mm
