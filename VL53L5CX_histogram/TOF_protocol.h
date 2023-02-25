@@ -5,6 +5,7 @@ enum TOF_RIO_msgs_enum {
   RANGE = 1,
   HISTOGRAM = 2,
   ARM_ANGLE = 3,
+  RAW_PIXEL_DATA = 4,
 };
 
 enum target_range_enum {
@@ -19,4 +20,10 @@ enum RIO_TOF_msgs_enum {
   TARGET_TYPE = 1,
   HISTOGRAM_ENABLE = 2,
   ARM_ANGLE_OFFSET = 3,
+  RAW_PIXEL_DATA_ENABLE = 4,
 };
+
+enum target_type_enum {
+  CONE = 0,
+  CUBE = 1,
+} ;
