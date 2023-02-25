@@ -13,9 +13,13 @@
   https://www.sparkfun.com/products/18642
 */
 
+// using TOF_protocol version 1.0
+
 #include <Wire.h>
 #include <SPI.h>
 #include <Adafruit_DotStar.h>
+#include <string.h>
+#include "TOF_protocol.h"
 
 #define NUMPIXELS 4 // Number of LEDs in strip
 
@@ -37,6 +41,8 @@ long measurements = 0;         // Used to calculate actual output rate
 long measurementStartTime = 0; // Used to calculate actual output rate
 
 int histogram[11];
+int histogram_f = 1;
+int cone_f = 1; // 1 means cone, 0 means cube
 
 //ok to change this tolerace over distance tolerance?
 void setColor(int index, int val) {
@@ -52,6 +58,94 @@ void setColor(int index, int val) {
     // Serial.print("green; just right");
     strip.setPixelColor(index, 0x500000); 
   }
+}
+
+void send_histogram()
+{
+  char stemp[256];
+  char smsg[256];
+  int i;
+  
+  // copy msg_type and data_length into message
+  sprintf(smsg, "%d,11,", TOF_RIO_msgs_enum::HISTOGRAM);    
+  for(i = 0; i < 11; i++) {
+    sprintf(stemp, "%d", histogram[i]);
+    strcat(smsg, stemp);
+    if(i < 10) {
+      // Serial.print(",");
+      strcat(smsg, ",");
+    } else {
+      strcat(smsg, "\r\n");
+    }
+  }
+  Serial.print(smsg);
+}
+
+// calculate range by calculating "center of mass" of histogram buckets
+int calc_range(int start, int end)
+{
+  int i;
+  int total = 0;
+  float range = 0;
+
+  // total number of pixels observed in this group
+  for(i = start; i <= end; i++) {
+    total += histogram[i];
+  }
+
+  // determine center of mass
+  // add up "distance x mass" for each histogram bucket
+  for(i = start; i <= end; i++) {
+    range += histogram[i] * i;
+  }
+  // divide by total to get center of mass
+  range /= total;
+  range *= 100;
+
+  return int(range + 0.5);
+}
+
+// determine if in target is in range and calculate range
+// send resulting range message
+void send_range()
+{
+  char stemp[256];
+  char smsg[256];
+  int i;
+  int hist_far = 0;
+  int hist_close = 0;
+  int hist_in_range = 0;
+  int target_range_determination = 0;
+  int target_range = 0;
+
+  // for now, test code, please update
+  // hist[0-3]  pixels < 400 mm
+  // hist[4-5]  400 mm < pixels < 600 mm
+  // hist[6-10] 600 mm < pixels
+
+  for(i = 0; i < 11; i++) {
+    if(i <= 3) {
+      hist_close += histogram[i];
+    } else if(i <= 5) {
+      hist_in_range += histogram[i];
+    } else {
+      hist_far += histogram[i];
+    }
+  }
+
+  if(hist_in_range > 30) {
+    target_range_determination = target_range_enum::TARGET_IN_RANGE;
+    target_range = calc_range(4,5);
+  } else if(hist_close > 30) {
+    target_range_determination = target_range_enum::TARGET_TOO_CLOSE;
+    target_range = calc_range(0,3);
+  } else {
+    target_range_determination = target_range_enum::TARGET_TOO_FAR;
+    target_range = calc_range(6,10);
+  }
+
+  sprintf(smsg, "%d,2,%d,%d\r\n", TOF_RIO_msgs_enum::RANGE, target_range_determination, target_range);
+  Serial.print(smsg);
 }
 
 void setup()
@@ -148,14 +242,12 @@ void loop()
         }
       }
 
-      for(i = 0; i < 11; i++) {
-        Serial.print(histogram[i]);
-        if(i < 10) {
-          Serial.print(",");
-        }
+      // send histogram message
+      if(histogram_f) {
+        send_histogram();
       }
-      Serial.println();
-
+      send_range();
+      
       // light some leds
       setColor(0, histogram[1]); // 300 mm <= dist < 400 mm
       setColor(1, histogram[2]); // 400 mm <= dist < 500 mm
