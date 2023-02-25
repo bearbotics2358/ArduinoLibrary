@@ -28,6 +28,7 @@
 #define CLOCKPIN   13
 Adafruit_DotStar strip(NUMPIXELS, DATAPIN, CLOCKPIN, DOTSTAR_BRG);
 
+#define MAXLEN 256
 
 #include <SparkFun_VL53L5CX_Library.h> //http://librarymanager/All#SparkFun_VL53L5CX
 
@@ -40,9 +41,13 @@ int imageWidth = 0;      // Used to pretty print output
 long measurements = 0;         // Used to calculate actual output rate
 long measurementStartTime = 0; // Used to calculate actual output rate
 
+char rx_buff[MAXLEN];
+int rx_index = 0;
+
 int histogram[11];
 int histogram_f = 1;
-int cone_f = 1; // 1 means cone, 0 means cube
+int cone_f = target_type_enum::CONE; 
+int raw_pixel_data_f = 1;
 
 //ok to change this tolerace over distance tolerance?
 void setColor(int index, int val) {
@@ -60,10 +65,81 @@ void setColor(int index, int val) {
   }
 }
 
+// return true if a command has been received and is stored in rx_buff
+int GetCommand()
+{
+  int ret = 0;
+  
+  // get command if there is one
+  // every time called, and every time through loop, get command chars
+  // if available
+  // when '\r' (or '\n') found, process command
+  // throw away remaining '\r' or '\n'
+  while(Serial.available() > 0) {
+    rx_buff[rx_index] = Serial.read();
+    if((rx_buff[rx_index] == '\r') 
+      || (rx_buff[rx_index] == '\n')) {
+      // process command
+      if(rx_index == 0) {
+        // no command
+        continue;
+      }
+      rx_buff[rx_index + 1] = 0;
+      Serial.print("cmd = ");
+      Serial.println(rx_buff);
+
+      // process command
+      ret = 1;
+      
+      // reset for next command
+      rx_index = 0;
+    } else {
+      // have not received end of command yet
+      if(rx_index < MAXLEN - 1) {
+        rx_index++;
+      }
+    }
+  }
+  return ret;
+}
+
+void ProcessCommand()
+{
+  // get msg_type and data_len
+  int msg_type = atoi(strtok(rx_buff, ","));
+  int data_len = atoi(strtok(NULL, ","));
+
+  switch(msg_type) {
+    case RIO_TOF_msgs_enum::TARGET_TYPE:
+      Serial.print("TARGET_TYPE command received : ");
+      if(data_len) {
+        cone_f = atoi(strtok(NULL, ","));
+        Serial.print(cone_f ? "CUBE" : "CONE");
+      }
+      Serial.println();
+      break;
+
+    case RIO_TOF_msgs_enum::HISTOGRAM_ENABLE:
+      if(data_len) {
+        histogram_f = atoi(strtok(NULL, ","));
+      }
+      break;
+    
+    case RIO_TOF_msgs_enum::RAW_PIXEL_DATA_ENABLE:
+      if(data_len) {
+        raw_pixel_data_f = atoi(strtok(NULL, ","));
+      }
+      break;
+    
+    default:
+      Serial.println("unknown command");
+  }
+}
+
 void send_histogram()
 {
-  char stemp[256];
-  char smsg[256];
+  char stemp[MAXLEN];
+  char smsg[MAXLEN];
   int i;
   
   // copy msg_type and data_length into message
@@ -109,8 +185,8 @@ int calc_range(int start, int end)
 // send resulting range message
 void send_range()
 {
-  char stemp[256];
-  char smsg[256];
+  char stemp[MAXLEN];
+  char smsg[MAXLEN];
   int i;
   int hist_far = 0;
   int hist_close = 0;
@@ -155,6 +231,9 @@ void setup()
   Serial.begin(115200);
   delay(1000);
   Serial.println("SparkFun VL53L5CX Imager Example");
+
+  // clear rx_buff
+  bzero(rx_buff, MAXLEN);
 
   strip.begin(); 
   // initialize LEDs to blue
@@ -203,6 +282,13 @@ void setup()
 void loop()
 {
   int i;
+  char stemp[MAXLEN];
+  int first_pixel = 1;
+  
+  // Get and process command
+  if(GetCommand()) {
+    ProcessCommand();
+  }
   
   // Poll sensor for new data
   if (myImager.isDataReady() == true)
@@ -228,9 +314,23 @@ void loop()
               histogram[i]++;
             }
           }
-          //two lines below previously uncommented
-          Serial.print(measurementData.distance_mm[x + y]); //print out histogram data -- Linda
-          Serial.print(",");
+          if(raw_pixel_data_f) {
+            // print raw pixel data message
+            if(first_pixel) {
+              first_pixel = 0;
+              // print msg header
+              sprintf(stemp, "%d,%d,", TOF_RIO_msgs_enum::RAW_PIXEL_DATA, imageWidth * imageWidth);
+              Serial.print(stemp);
+            }
+            //two lines below previously uncommented
+            Serial.print(measurementData.distance_mm[x + y]); // actually, prints out raw pixel data
+            if((y == imageWidth * (imageWidth - 1)) && (x == 0)) {
+              // last pixel has been sent
+              Serial.println();
+            } else {
+              Serial.print(",");
+            }
+          }
           //--cone
           // 1st element - 0-5
           // 2nd element - 10-20
