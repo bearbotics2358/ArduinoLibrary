@@ -11,26 +11,19 @@
 #include <string.h>
 #include "TOF_protocol.h"
 
+// comment out the next line for running with an Arduino
+#define PROP_MAKER
+
+// for debugging printouts, uncomment the next line
+// #define DEBUG
+
 #define NUMPIXELS 30 // Number of LEDs in strip
 
-#if defined(__SAMD21G18A__) || defined(__AVR_ATmega32U4__) || defined(NRF52840_XXAA)
+#ifdef PROP_MAKER
   #define NEOPIXEL_PIN 5
   #define POWER_PIN    10
-#elif defined(__AVR_ATmega328P__)
+#elif // Arduino
   #define NEOPIXEL_PIN 5
-  #define POWER_PIN    10
-#elif defined(NRF52)
-  #define NEOPIXEL_PIN 27
-  #define POWER_PIN    11
-#elif defined(ESP8266)
-  #define NEOPIXEL_PIN 2
-  #define POWER_PIN    15
-#elif defined(TEENSYDUINO)
-  #define NEOPIXEL_PIN 8
-  #define POWER_PIN    10
-#elif defined(ESP32)
-  #define NEOPIXEL_PIN 14
-  #define POWER_PIN    33
 #endif
 
 // create a neopixel strip
@@ -42,7 +35,7 @@ Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + N
 char rx_buff[MAXLEN];
 int rx_index = 0;
 
-int cone_f = target_type_enum::CONE; 
+int cone_f = 1; // start with a cone
 
 int rainbow_f = 1; // rainbow until target type command received
 
@@ -84,8 +77,6 @@ void rainbow(uint8_t wait) {
     for(i=0; i<strip.numPixels(); i++) {
       strip.setPixelColor(i, Wheel((i+j) & 255));
     }
-    // turn on the Prop-Maker FeatherWing's power pin
-    digitalWrite(POWER_PIN, HIGH);
     // write the pixel values
     strip.show();
     delay(wait);
@@ -112,8 +103,10 @@ int GetCommand()
         continue;
       }
       rx_buff[rx_index + 1] = 0;
+#ifdef DEBUG      
       Serial.print("cmd = ");
       Serial.println(rx_buff);
+#endif
 
       // process command
       ret = 1;
@@ -135,26 +128,41 @@ void ProcessCommand()
   // get msg_type and data_len
   int msg_type = atoi(strtok(rx_buff, ","));
   int data_len = atoi(strtok(NULL, ","));
+  int data0 = 0;
 
   switch(msg_type) {
     case RIO_TOF_msgs_enum::TARGET_TYPE:
+#ifdef DEBUG    
       Serial.print("TARGET_TYPE command received : ");
+#endif      
       if(data_len) {
-        cone_f = atoi(strtok(NULL, ","));
-        Serial.print(cone_f ? "CUBE" : "CONE");
+        data0 = atoi(strtok(NULL, ","));
+        cone_f = (data0 == target_type_enum::CONE) ? 1 : 0;
+#ifdef DEBUG    
+        Serial.print(cone_f ? "CONE" : "CUBE");
+#endif      
+        // stop rainbow display
         rainbow_f = 0;
+        // light strip appropriate color
         if(cone_f) {
-          strip.fill(0x400040);
-        } else {
+          // set to orange
           strip.fill(0x804000);
+        } else {
+          // set to purple
+          strip.fill(0x400040);
         }
         strip.show();
       }
+#ifdef DEBUG    
       Serial.println();
+#endif      
       break;
     
     default:
+#ifdef DEBUG    
       Serial.println("unknown command");
+#endif      
+      break;
   }
 }
 
@@ -164,15 +172,19 @@ void setup()
   
   Serial.begin(115200);
   delay(1000);
-  Serial.println("SparkFun VL53L5CX Imager Example");
+#ifdef DEBUG    
+  Serial.println("LED strips control");
+#endif      
 
   // clear rx_buff
   bzero(rx_buff, MAXLEN);
 
+#ifdef PROP_MAKER
   // Set power pin to output
   pinMode(POWER_PIN, OUTPUT);
-  // Enable the pin, we're not currently writing to the neopixels.
+  // turn on the Prop-Maker FeatherWing's power pin
   digitalWrite(POWER_PIN, HIGH);
+#endif
 
   // This initializes the NeoPixel library.
   strip.begin(); 
@@ -191,7 +203,7 @@ void loop()
   
   if(rainbow_f) {
     // cycle a the rainbow with a 20ms wait
-    rainbow(20);
+    rainbow(10);
   }
 
   // Get and process command
@@ -200,5 +212,5 @@ void loop()
   }
   
 
-  delay(100); // Small delay between polling
+  delay(5); // Small delay between polling
 }
