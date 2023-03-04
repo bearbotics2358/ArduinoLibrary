@@ -33,8 +33,10 @@
   #define POWER_PIN    33
 #endif
 
-// create a neopixel strip
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
+// create neopixel strips
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, 4, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(NUMPIXELS, 5, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip3 = Adafruit_NeoPixel(NUMPIXELS, 6, NEO_GRB + NEO_KHZ800);
 
 
 #define MAXLEN 256
@@ -53,12 +55,18 @@ void setColor(int index, int val) {
   if((val < 10)) { // 0xGGRRBB (color values)
     // Serial.print("red; not enough, too far");
     strip.setPixelColor(index, 0x005000);
+    strip2.setPixelColor(index, 0x005000);
+    strip3.setPixelColor(index, 0x005000);
   } else if(val < 20) { 
     // Serial.print("yellow; close");
     strip.setPixelColor(index, 0x505000);  
+    strip2.setPixelColor(index, 0x505000);  
+    strip3.setPixelColor(index, 0x505000);  
   } else {
     // Serial.print("green; just right");
     strip.setPixelColor(index, 0x500000); 
+    strip2.setPixelColor(index, 0x500000); 
+    strip3.setPixelColor(index, 0x500000); 
   }
 }
 
@@ -138,17 +146,23 @@ void ProcessCommand()
 
   switch(msg_type) {
     case RIO_TOF_msgs_enum::TARGET_TYPE:
-      Serial.print("TARGET_TYPE command received : ");
+      Serial.print("TARGET_TYPE command received : "); // 0 is cone, 1 is cube
       if(data_len) {
         cone_f = atoi(strtok(NULL, ","));
         Serial.print(cone_f ? "CUBE" : "CONE");
         rainbow_f = 0;
         if(cone_f) {
           strip.fill(0x400040);
+          strip2.fill(0x400040);
+          strip3.fill(0x400040);
         } else {
           strip.fill(0x804000);
+          strip2.fill(0x804000);
+          strip3.fill(0x804000);
         }
         strip.show();
+        strip2.show();
+        strip3.show();
       }
       Serial.println();
       break;
@@ -167,7 +181,8 @@ void setup()
   Serial.println("SparkFun VL53L5CX Imager Example");
 
   // clear rx_buff
-  bzero(rx_buff, MAXLEN);
+//  bzero(rx_buff, MAXLEN);
+  memset(rx_buff, MAXLEN, 0);
 
   // Set power pin to output
   pinMode(POWER_PIN, OUTPUT);
@@ -176,12 +191,16 @@ void setup()
 
   // This initializes the NeoPixel library.
   strip.begin(); 
+  strip2.begin(); 
+  strip3.begin(); 
 
   // initialize LEDs to blue
   for(i = 0; i < NUMPIXELS; i++) {
     strip.setPixelColor(i, 0x000050);      
   }
   strip.show();                     // Refresh strip
+  strip2.show();                     // Refresh strip
+  strip3.show();                     // Refresh strip
 }
 
 void loop()
