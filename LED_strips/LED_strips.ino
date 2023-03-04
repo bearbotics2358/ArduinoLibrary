@@ -37,6 +37,7 @@
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, 4, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(NUMPIXELS, 5, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel strip3 = Adafruit_NeoPixel(NUMPIXELS, 6, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip4 = Adafruit_NeoPixel(NUMPIXELS, 6, NEO_GRB + NEO_KHZ800);
 
 
 #define MAXLEN 256
@@ -58,16 +59,19 @@ void setColor(int index, int val) {
     strip.setPixelColor(index, 0x005000);
     strip2.setPixelColor(index, 0x005000);
     strip3.setPixelColor(index, 0x005000);
+    strip4.setPixelColor(index, 0x005000);
   } else if(val < 20) { 
     // Serial.print("yellow; close");
     strip.setPixelColor(index, 0x505000);  
     strip2.setPixelColor(index, 0x505000);  
     strip3.setPixelColor(index, 0x505000);  
+    strip4.setPixelColor(index, 0x505000);  
   } else {
     // Serial.print("green; just right");
     strip.setPixelColor(index, 0x500000); 
     strip2.setPixelColor(index, 0x500000); 
     strip3.setPixelColor(index, 0x500000); 
+    strip4.setPixelColor(index, 0x500000); 
   }
 }
 
@@ -156,14 +160,17 @@ void ProcessCommand()
           strip.fill(0x400040);
           strip2.fill(0x400040);
           strip3.fill(0x400040);
+          strip4.fill(0x400040);
         } else {
           strip.fill(0x804000);
           strip2.fill(0x804000);
           strip3.fill(0x804000);
+          strip4.fill(0x804000);
         }
         strip.show();
         strip2.show();
         strip3.show();
+        strip4.show();
       }
       Serial.println();
       break;
@@ -194,16 +201,20 @@ void setup()
   strip.begin(); 
   strip2.begin(); 
   strip3.begin(); 
+  strip4.begin(); 
 
   // initialize LEDs to blue
   for(i = 0; i < NUMPIXELS; i++) {
     strip.setPixelColor(i, 0x000050);      
     strip2.setPixelColor(i, 0x000050);      
-    strip3.setPixelColor(i, 0x000050);      
+    strip3.setPixelColor(i, 0x000050);
+    strip4.setPixelColor(i, 0x000050);
+          
   }
   strip.show();                     // Refresh strip
   strip2.show();                     // Refresh strip
   strip3.show();                     // Refresh strip
+  strip4.show();                     // Refresh strip
 }
 
 void loop()
