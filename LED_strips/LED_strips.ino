@@ -46,6 +46,7 @@ int rx_index = 0;
 
 int cone_f = target_type_enum::CONE; 
 
+
 int rainbow_f = 1; // rainbow until target type command received
 
 //ok to change this tolerace over distance tolerance?
@@ -197,6 +198,8 @@ void setup()
   // initialize LEDs to blue
   for(i = 0; i < NUMPIXELS; i++) {
     strip.setPixelColor(i, 0x000050);      
+    strip2.setPixelColor(i, 0x000050);      
+    strip3.setPixelColor(i, 0x000050);      
   }
   strip.show();                     // Refresh strip
   strip2.show();                     // Refresh strip
