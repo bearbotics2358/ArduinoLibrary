@@ -12,7 +12,7 @@
 #include "TOF_protocol.h"
 
 // comment out the next line for running with an Arduino
-#define PROP_MAKER
+// #define PROP_MAKER
 
 // for debugging printouts, uncomment the next line
 // #define DEBUG
@@ -22,12 +22,15 @@
 #ifdef PROP_MAKER
   #define NEOPIXEL_PIN 5
   #define POWER_PIN    10
-#elif // Arduino
+#else // Arduino
   #define NEOPIXEL_PIN 5
 #endif
 
-// create a neopixel strip
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
+// create neopixel strips
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, 4, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(NUMPIXELS, 5, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip3 = Adafruit_NeoPixel(NUMPIXELS, 6, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip4 = Adafruit_NeoPixel(NUMPIXELS, 6, NEO_GRB + NEO_KHZ800);
 
 
 #define MAXLEN 256
@@ -37,7 +40,8 @@ int rx_index = 0;
 
 int cone_f = 1; // start with a cone
 
-int rainbow_f = 1; // rainbow until target type command received
+
+int rainbow_f = 0; // rainbow until target type command received
 
 //ok to change this tolerace over distance tolerance?
 void setColor(int index, int val) {
@@ -46,12 +50,21 @@ void setColor(int index, int val) {
   if((val < 10)) { // 0xGGRRBB (color values)
     // Serial.print("red; not enough, too far");
     strip.setPixelColor(index, 0x005000);
+    strip2.setPixelColor(index, 0x005000);
+    strip3.setPixelColor(index, 0x005000);
+    strip4.setPixelColor(index, 0x005000);
   } else if(val < 20) { 
     // Serial.print("yellow; close");
     strip.setPixelColor(index, 0x505000);  
+    strip2.setPixelColor(index, 0x505000);  
+    strip3.setPixelColor(index, 0x505000);  
+    strip4.setPixelColor(index, 0x505000);  
   } else {
     // Serial.print("green; just right");
     strip.setPixelColor(index, 0x500000); 
+    strip2.setPixelColor(index, 0x500000); 
+    strip3.setPixelColor(index, 0x500000); 
+    strip4.setPixelColor(index, 0x500000); 
   }
 }
 
@@ -145,13 +158,22 @@ void ProcessCommand()
         rainbow_f = 0;
         // light strip appropriate color
         if(cone_f) {
-          // set to orange
-          strip.fill(0x804000);
-        } else {
           // set to purple
           strip.fill(0x400040);
+          strip2.fill(0x400040);
+          strip3.fill(0x400040);
+          strip4.fill(0x400040);
+        } else {
+          // set to orange
+          strip.fill(0x804000);
+          strip2.fill(0x804000);
+          strip3.fill(0x804000);
+          strip4.fill(0x804000);
         }
         strip.show();
+        strip2.show();
+        strip3.show();
+        strip4.show();
       }
 #ifdef DEBUG    
       Serial.println();
@@ -177,7 +199,8 @@ void setup()
 #endif      
 
   // clear rx_buff
-  bzero(rx_buff, MAXLEN);
+//  bzero(rx_buff, MAXLEN);
+  memset(rx_buff, MAXLEN, 0);
 
 #ifdef PROP_MAKER
   // Set power pin to output
@@ -188,12 +211,22 @@ void setup()
 
   // This initializes the NeoPixel library.
   strip.begin(); 
+  strip2.begin(); 
+  strip3.begin(); 
+  strip4.begin(); 
 
   // initialize LEDs to blue
   for(i = 0; i < NUMPIXELS; i++) {
     strip.setPixelColor(i, 0x000050);      
+    strip2.setPixelColor(i, 0x000050);      
+    strip3.setPixelColor(i, 0x000050);
+    strip4.setPixelColor(i, 0x000050);
+          
   }
   strip.show();                     // Refresh strip
+  strip2.show();                     // Refresh strip
+  strip3.show();                     // Refresh strip
+  strip4.show();                     // Refresh strip
 }
 
 void loop()
