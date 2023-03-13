@@ -45,7 +45,7 @@ char rx_buff[MAXLEN];
 int rx_index = 0;
 
 int histogram[11];
-int histogram_f = 0;
+int histogram_f = 1; //3-13
 int cone_f = target_type_enum::CONE; 
 int raw_pixel_data_f = 0;
 
@@ -199,22 +199,28 @@ void send_range()
   // hist[4-5]  400 mm < pixels < 600 mm
   // hist[6-10] 600 mm < pixels
 
+  //too close -- first bucket is 20 or greater  
+  //in range -- first bucket is 0
+  //too far -- second bucket is 0
+
   for(i = 0; i < 11; i++) {
-    if(i <= 3) {
+    if(i <= 0) { //used to be 3
       hist_close += histogram[i];
-    } else if(i <= 5) {
+    } else if(i <= 1) { //used to be 5
       hist_in_range += histogram[i];
     } else {
       hist_far += histogram[i];
     }
   }
 
-  if(hist_in_range > 30) {
-    target_range_determination = target_range_enum::TARGET_IN_RANGE;
-    target_range = calc_range(4,5);
-  } else if(hist_close > 30) {
+  if(hist_close > 20) {
+    //target_range_determination = target_range_enum::TARGET_IN_RANGE;
+    //target_range = calc_range(4,5);
     target_range_determination = target_range_enum::TARGET_TOO_CLOSE;
-    target_range = calc_range(0,3);
+    //target_range = calc_range(0,3);
+  } else if(hist_in_range > 20) {
+    target_range_determination = target_range_enum::TARGET_IN_RANGE;
+    //target_range = calc_range(4,5);
   } else {
     target_range_determination = target_range_enum::TARGET_TOO_FAR;
     target_range = calc_range(6,10);
