@@ -45,9 +45,9 @@ char rx_buff[MAXLEN];
 int rx_index = 0;
 
 int histogram[11];
-int histogram_f = 1;
+int histogram_f = 0;
 int cone_f = target_type_enum::CONE; 
-int raw_pixel_data_f = 1;
+int raw_pixel_data_f = 0;
 
 //ok to change this tolerace over distance tolerance?
 void setColor(int index, int val) {
@@ -85,8 +85,8 @@ int GetCommand()
         continue;
       }
       rx_buff[rx_index + 1] = 0;
-      Serial.print("cmd = ");
-      Serial.println(rx_buff);
+      Serial.print("9,1,cmd = "); //bugging 3-9
+      Serial.println(rx_buff); //this must be important
 
       // process command
       ret = 1;
@@ -110,8 +110,8 @@ void ProcessCommand()
   int data_len = atoi(strtok(NULL, ","));
 
   switch(msg_type) {
-    case RIO_TOF_msgs_enum::TARGET_TYPE:
-      Serial.print("TARGET_TYPE command received : ");
+    case RIO_TOF_msgs_enum::TARGET_TYPE: //this is what we care about
+      Serial.print("9,1,TARGET_TYPE command received : "); //3-9 bugs
       if(data_len) {
         cone_f = atoi(strtok(NULL, ","));
         Serial.print(cone_f ? "CUBE" : "CONE");
@@ -132,7 +132,7 @@ void ProcessCommand()
       break;
     
     default:
-      Serial.println("unknown command");
+      Serial.println("9,1,unknown command");
   }
 }
 
@@ -143,12 +143,12 @@ void send_histogram()
   int i;
   
   // copy msg_type and data_length into message
-  sprintf(smsg, "%d,11,", TOF_RIO_msgs_enum::HISTOGRAM);    
+  sprintf(smsg, "%d,11,", TOF_RIO_msgs_enum::HISTOGRAM);  //sends a message, dont change  
   for(i = 0; i < 11; i++) {
     sprintf(stemp, "%d", histogram[i]);
     strcat(smsg, stemp);
     if(i < 10) {
-      // Serial.print(",");
+      //Serial.print(",");
       strcat(smsg, ",");
     } else {
       strcat(smsg, "\r\n");
@@ -230,7 +230,7 @@ void setup()
   
   Serial.begin(115200);
   delay(1000);
-  Serial.println("SparkFun VL53L5CX Imager Example");
+  Serial.println("9,1,SparkFun VL53L5CX Imager Example");
 
   // clear rx_buff
   bzero(rx_buff, MAXLEN);
@@ -247,11 +247,11 @@ void setup()
 
   // myImager.setWireMaxPacketSize(128); // Increase default from 32 bytes to 128 - not supported on all platforms
 
-  Serial.println("Initializing sensor board. This can take up to 10s. Please wait.");
+  Serial.println("9,1,Initializing sensor board. This can take up to 10s. Please wait.");
 
   if (myImager.begin() == false)
   {
-    Serial.println(F("Sensor not found - check your wiring. Freezing"));
+    Serial.println(F("9,1,Sensor not found - check your wiring. Freezing"));
     while (1)
       ;
   }
@@ -266,12 +266,12 @@ void setup()
   // Using 8x8, min frequency is 1Hz and max is 15Hz
   myImager.setRangingFrequency(15);
 
-  Serial.print("Sharpener(%): ");
+  Serial.print("9,1,Sharpener(%): ");
   Serial.println(myImager.getSharpenerPercent());
 
   myImager.setSharpenerPercent(99);
 
-  Serial.print("Sharpener(%): ");
+  Serial.print("9,1,Sharpener(%): ");
   Serial.println(myImager.getSharpenerPercent());
 
   myImager.startRanging();
@@ -322,7 +322,7 @@ void loop()
               sprintf(stemp, "%d,%d,", TOF_RIO_msgs_enum::RAW_PIXEL_DATA, imageWidth * imageWidth);
               Serial.print(stemp);
             }
-            //two lines below previously uncommented
+            //two lines below previously uncommented            
             Serial.print(measurementData.distance_mm[x + y]); // actually, prints out raw pixel data
             if((y == imageWidth * (imageWidth - 1)) && (x == 0)) {
               // last pixel has been sent
@@ -330,6 +330,7 @@ void loop()
             } else {
               Serial.print(",");
             }
+            
           }
           //--cone
           // 1st element - 0-5

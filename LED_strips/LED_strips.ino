@@ -15,7 +15,7 @@
 // #define PROP_MAKER
 
 // for debugging printouts, uncomment the next line
-// #define DEBUG
+ #define DEBUG //previously commented out -- when commented none of the if define DEBUG statements print
 
 #define NUMPIXELS 30 // Number of LEDs in strip
 
@@ -117,7 +117,7 @@ int GetCommand()
       }
       rx_buff[rx_index + 1] = 0;
 #ifdef DEBUG      
-      Serial.print("cmd = ");
+      Serial.print("9,1,cmd = ");
       Serial.println(rx_buff);
 #endif
 
@@ -146,7 +146,7 @@ void ProcessCommand()
   switch(msg_type) {
     case RIO_TOF_msgs_enum::TARGET_TYPE:
 #ifdef DEBUG    
-      Serial.print("TARGET_TYPE command received : ");
+      Serial.print("9,1,TARGET_TYPE command received : ");
 #endif      
       if(data_len) {
         data0 = atoi(strtok(NULL, ","));
@@ -182,7 +182,7 @@ void ProcessCommand()
     
     default:
 #ifdef DEBUG    
-      Serial.println("unknown command");
+      Serial.println("9,1,unknown command");
 #endif      
       break;
   }
@@ -195,7 +195,7 @@ void setup()
   Serial.begin(115200);
   delay(1000);
 #ifdef DEBUG    
-  Serial.println("LED strips control");
+  Serial.println("9,1,LED strips control");
 #endif      
 
   // clear rx_buff
