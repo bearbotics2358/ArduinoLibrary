@@ -204,9 +204,9 @@ void send_range()
   //too far -- second bucket is 0
 
   for(i = 0; i < 11; i++) {
-    if(i <= 0) { //used to be 3
+    if(i <= 1) { //used to be 3, then 0
       hist_close += histogram[i];
-    } else if(i <= 1) { //used to be 5
+    } else if(i <= 2) { //used to be 5, then 1
       hist_in_range += histogram[i];
     } else {
       hist_far += histogram[i];
@@ -218,7 +218,7 @@ void send_range()
     //target_range = calc_range(4,5);
     target_range_determination = target_range_enum::TARGET_TOO_CLOSE;
     //target_range = calc_range(0,3);
-  } else if(hist_in_range > 20) {
+  } else if(hist_in_range > 10) { //used to be 20, 3-16
     target_range_determination = target_range_enum::TARGET_IN_RANGE;
     //target_range = calc_range(4,5);
   } else {
