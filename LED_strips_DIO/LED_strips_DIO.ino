@@ -102,17 +102,17 @@ void UpdateLEDS()
 
   // light strips appropriate color
   if(cone_f) {
-    // set to yellow for CONE
-    strip.fill(0x400040);
-    strip2.fill(0x400040);
-    strip3.fill(0x400040);
-    strip4.fill(0x400040);
-  } else {
-    // set to purple for CUBE
+    // set to orange for CONE
     strip.fill(0x804000);
     strip2.fill(0x804000);
     strip3.fill(0x804000);
     strip4.fill(0x804000);
+  } else {
+    // set to purple for CUBE
+    strip.fill(0x400040);
+    strip2.fill(0x400040);
+    strip3.fill(0x400040);
+    strip4.fill(0x400040);
   }
   strip.show();
   strip2.show();
