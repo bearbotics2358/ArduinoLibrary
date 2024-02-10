@@ -7,7 +7,8 @@
 #include "Adafruit_TinyUSB.h"
 
 #define  DEFAULT_I2C_ADDR 0x3A
-
+#define BOARD_2_ADDR 0x3B
+#define NUM_BOARDS 2
 
 
 
@@ -36,7 +37,7 @@ Adafruit_USBD_HID usb_hid(desc_hid_report, sizeof(desc_hid_report), HID_ITF_PROT
 hid_gamepad_report_t gp;
 
 
-Adafruit_seesaw ss;
+Adafruit_seesaw ss[NUM_BOARDS];
 
 void setup() {
   #if defined(ARDUINO_ARCH_MBED) && defined(ARDUINO_ARCH_RP2040)
@@ -50,8 +51,13 @@ void setup() {
 
   Serial.println(F("Adafruit PID 5296 I2C QT 4x LED Arcade Buttons test!"));
   
-  if (!ss.begin(DEFAULT_I2C_ADDR)) {
+  if (!ss[0].begin(DEFAULT_I2C_ADDR)) {
     Serial.println(F("seesaw not found!"));
+    while(1) delay(10);
+  }
+
+  if (!ss[1].begin(BOARD_2_ADDR)) {
+    Serial.println(F("seesaw 2 not found!"));
     while(1) delay(10);
   }
 
@@ -73,7 +79,11 @@ void setup() {
   uint16_t pid;
   uint8_t year, mon, day;
   
-  ss.getProdDatecode(&pid, &year, &mon, &day);
+ 
+
+for(int i = 0; i<NUM_BOARDS; i++){\
+
+ ss[i].getProdDatecode(&pid, &year, &mon, &day);
   Serial.print("seesaw found PID: ");
   Serial.print(pid);
   Serial.print(" datecode: ");
@@ -87,14 +97,15 @@ void setup() {
   }
 
   Serial.println(F("seesaw started OK!"));
-  ss.pinMode(SWITCH1, INPUT_PULLUP);
-  ss.pinMode(SWITCH2, INPUT_PULLUP);
-  ss.pinMode(SWITCH3, INPUT_PULLUP);
-  ss.pinMode(SWITCH4, INPUT_PULLUP);
-  ss.analogWrite(PWM1, 127);
-  ss.analogWrite(PWM2, 127);
-  ss.analogWrite(PWM3, 127);
-  ss.analogWrite(PWM4, 127);
+  ss[i].pinMode(SWITCH1, INPUT_PULLUP);
+  ss[i].pinMode(SWITCH2, INPUT_PULLUP);
+  ss[i].pinMode(SWITCH3, INPUT_PULLUP);
+  ss[i].pinMode(SWITCH4, INPUT_PULLUP);
+  ss[i].analogWrite(PWM1, 127);
+  ss[i].analogWrite(PWM2, 127);
+  ss[i].analogWrite(PWM3, 127);
+  ss[i].analogWrite(PWM4, 127);
+}
 }
 
 uint8_t incr = 0;
@@ -120,41 +131,85 @@ void loop() {
 
 
 
- if (! ss.digitalRead(SWITCH1)) {
+ if (! ss[0].digitalRead(SWITCH1)) {
     Serial.println("Switch 1 Flipped");
-    ss.analogWrite(SWITCH1, 1);
+    ss[0].analogWrite(SWITCH1, 1);
     incr += 5;
      gp.buttons |= (1U << 0);
   } else {
-    ss.analogWrite(PWM1, 0);
+    ss[0].analogWrite(PWM1, 0);
   }
   
-  if (! ss.digitalRead(SWITCH2)) {
+  if (! ss[0].digitalRead(SWITCH2)) {
     Serial.println("Switch 2 pressed");
-    ss.analogWrite(PWM2, incr);
+    ss[0].analogWrite(PWM2, incr);
     incr += 5;
      gp.buttons |= (1U << 1);
   } else {
-    ss.analogWrite(PWM2, 0);
+    ss[0].analogWrite(PWM2, 0);
   }
   
-  if (! ss.digitalRead(SWITCH3)) {
+  if (! ss[0].digitalRead(SWITCH3)) {
     Serial.println("Switch 3 pressed");
-    ss.analogWrite(PWM3, incr);
+    ss[0].analogWrite(PWM3, incr);
     incr += 5;
      gp.buttons |= (1U << 2);
   } else {
-    ss.analogWrite(PWM3, 0);
+    ss[0].analogWrite(PWM3, 0);
   }
   
-  if (! ss.digitalRead(SWITCH4)) {
+  if (! ss[0].digitalRead(SWITCH4)) {
     Serial.println("Switch 4 pressed");
-    ss.analogWrite(PWM4, incr);
+    ss[0].analogWrite(PWM4, incr);
     incr += 5;
     gp.buttons |= (1U << 3);
   } else {
-    ss.analogWrite(PWM4, 0);
+    ss[0].analogWrite(PWM4, 0);
   }
+
+
+
+
+
+
+
+
+if (! ss[1].digitalRead(SWITCH1)) {
+    Serial.println("Switch 1 Flipped");
+    ss[1].analogWrite(SWITCH1, 1);
+    incr += 5;
+     gp.buttons |= (1U << 4);
+  } else {
+    ss[1].analogWrite(PWM1, 0);
+  }
+  
+  if (! ss[1].digitalRead(SWITCH2)) {
+    Serial.println("Switch 2 pressed");
+    ss[1].analogWrite(PWM2, incr);
+    incr += 5;
+     gp.buttons |= (1U << 5);
+  } else {
+    ss[1].analogWrite(PWM2, 0);
+  }
+  
+  if (! ss[1].digitalRead(SWITCH3)) {
+    Serial.println("Switch 3 pressed");
+    ss[1].analogWrite(PWM3, incr);
+    incr += 5;
+     gp.buttons |= (1U << 6);
+  } else {
+    ss[1].analogWrite(PWM3, 0);
+  }
+  
+  if (! ss[1].digitalRead(SWITCH4)) {
+    Serial.println("Switch 4 pressed");
+    ss[1].analogWrite(PWM4, incr);
+    incr += 5;
+    gp.buttons |= (1U << 7);
+  } else {
+    ss[1].analogWrite(PWM4, 0);
+  }
+
 
   usb_hid.sendReport(0, &gp, sizeof(gp)); delay(10);
   delay(10);
