@@ -8,7 +8,8 @@
 
 #define  DEFAULT_I2C_ADDR 0x3A
 #define BOARD_2_ADDR 0x3B
-#define NUM_BOARDS 2
+#define BOARD_3_ADDR 0x3C
+#define NUM_BOARDS 3
 
 
 
@@ -58,6 +59,11 @@ void setup() {
 
   if (!ss[1].begin(BOARD_2_ADDR)) {
     Serial.println(F("seesaw 2 not found!"));
+    while(1) delay(10);
+  }
+
+ if (!ss[2].begin(BOARD_3_ADDR)) {
+    Serial.println(F("seesaw 3 not found!"));
     while(1) delay(10);
   }
 
@@ -211,7 +217,45 @@ if (! ss[1].digitalRead(SWITCH1)) {
   }
 
 
+
+
+  if (! ss[2].digitalRead(SWITCH1)) {
+    Serial.println("Switch 1 Flipped");
+    ss[2].analogWrite(SWITCH1, 1);
+    incr += 5;
+     gp.buttons |= (1U << 8);
+  } else {
+    ss[2].analogWrite(PWM1, 0);
+  }
+
+  if (! ss[2].digitalRead(SWITCH2)) {
+    Serial.println("Switch 2 pressed");
+    ss[2].analogWrite(PWM2, incr);
+    incr += 5;
+     gp.buttons |= (1U << 9);
+  } else {
+    ss[2].analogWrite(PWM2, 0);
+  }
+
+  if (! ss[2].digitalRead(SWITCH3)) {
+    Serial.println("Switch 3 pressed");
+    ss[2].analogWrite(PWM3, incr);
+    incr += 5;
+     gp.buttons |= (1U << 10);
+  } else {
+    ss[2].analogWrite(PWM3, 0);
+  }
+
+  if (! ss[2].digitalRead(SWITCH4)) {
+    Serial.println("Switch 4 pressed");
+    ss[2].analogWrite(PWM4, incr);
+    incr += 5;
+    gp.buttons |= (1U << 11);
+  } else {
+    ss[2].analogWrite(PWM4, 0);
+  }
+
+
   usb_hid.sendReport(0, &gp, sizeof(gp)); delay(10);
   delay(10);
 }
-
