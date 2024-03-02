@@ -13,6 +13,7 @@
 
 
 
+
 #define  SWITCH1  18  // PA01
 #define  SWITCH2  19 // PA02
 #define  SWITCH3  20 // PA03
@@ -62,7 +63,7 @@ void setup() {
     while(1) delay(10);
   }
 
- if (!ss[2].begin(BOARD_3_ADDR)) {
+   if (!ss[2].begin(BOARD_3_ADDR)) {
     Serial.println(F("seesaw 3 not found!"));
     while(1) delay(10);
   }
@@ -118,11 +119,11 @@ uint8_t incr = 0;
 
 void loop() {
 
-   /* if (usb_hid.ready()) {
-      Serial.println("HID ready");
+    if (!usb_hid.ready()) {
+      Serial.println("HID not ready");
       return;
-    }*/
-    if (!usb_hid.ready()) return;
+    }
+    //if (!usb_hid.ready()) return;
 
   // Reset buttons
  // Serial.println("No pressing buttons");
@@ -134,40 +135,37 @@ void loop() {
   gp.ry = 0;
   gp.hat = 0;
   gp.buttons = 0;
+  incr = 255;
 
 
 
  if (! ss[0].digitalRead(SWITCH1)) {
-    Serial.println("Switch 1 Flipped");
-    ss[0].analogWrite(SWITCH1, 1);
-    incr += 5;
+    Serial.println("Button 1 Pressed");
+    ss[0].analogWrite(SWITCH1, incr);
      gp.buttons |= (1U << 0);
   } else {
     ss[0].analogWrite(PWM1, 0);
   }
   
   if (! ss[0].digitalRead(SWITCH2)) {
-    Serial.println("Switch 2 pressed");
+    Serial.println("Button 2 pressed");
     ss[0].analogWrite(PWM2, incr);
-    incr += 5;
      gp.buttons |= (1U << 1);
   } else {
     ss[0].analogWrite(PWM2, 0);
   }
   
   if (! ss[0].digitalRead(SWITCH3)) {
-    Serial.println("Switch 3 pressed");
+    Serial.println("Button 3 pressed");
     ss[0].analogWrite(PWM3, incr);
-    incr += 5;
      gp.buttons |= (1U << 2);
   } else {
     ss[0].analogWrite(PWM3, 0);
   }
   
   if (! ss[0].digitalRead(SWITCH4)) {
-    Serial.println("Switch 4 pressed");
+    Serial.println("Button 4 pressed");
     ss[0].analogWrite(PWM4, incr);
-    incr += 5;
     gp.buttons |= (1U << 3);
   } else {
     ss[0].analogWrite(PWM4, 0);
@@ -181,36 +179,32 @@ void loop() {
 
 
 if (! ss[1].digitalRead(SWITCH1)) {
-    Serial.println("Switch 1 Flipped");
-    ss[1].analogWrite(SWITCH1, 1);
-    incr += 5;
+    Serial.println("Button 5 Pressed");
+    ss[1].analogWrite(PWM1, incr);
      gp.buttons |= (1U << 4);
   } else {
     ss[1].analogWrite(PWM1, 0);
   }
   
   if (! ss[1].digitalRead(SWITCH2)) {
-    Serial.println("Switch 2 pressed");
+    Serial.println("Button 6 pressed");
     ss[1].analogWrite(PWM2, incr);
-    incr += 5;
      gp.buttons |= (1U << 5);
   } else {
     ss[1].analogWrite(PWM2, 0);
   }
   
   if (! ss[1].digitalRead(SWITCH3)) {
-    Serial.println("Switch 3 pressed");
-    ss[1].analogWrite(PWM3, incr);
-    incr += 5;
+    Serial.println("Switch 7 Flipped");
+    ss[1].analogWrite(SWITCH3, incr);
      gp.buttons |= (1U << 6);
   } else {
     ss[1].analogWrite(PWM3, 0);
   }
   
   if (! ss[1].digitalRead(SWITCH4)) {
-    Serial.println("Switch 4 pressed");
+    Serial.println("Button 8 pressed");
     ss[1].analogWrite(PWM4, incr);
-    incr += 5;
     gp.buttons |= (1U << 7);
   } else {
     ss[1].analogWrite(PWM4, 0);
@@ -218,39 +212,34 @@ if (! ss[1].digitalRead(SWITCH1)) {
 
 
 
-
   if (! ss[2].digitalRead(SWITCH1)) {
-    Serial.println("Switch 1 Flipped");
-    ss[2].analogWrite(SWITCH1, 1);
-    incr += 5;
+    Serial.println("Button 9 Pressed");
+    ss[2].analogWrite(PWM1, incr);
      gp.buttons |= (1U << 8);
   } else {
     ss[2].analogWrite(PWM1, 0);
   }
 
   if (! ss[2].digitalRead(SWITCH2)) {
-    Serial.println("Switch 2 pressed");
+    Serial.println("Button 10 Pressed");
     ss[2].analogWrite(PWM2, incr);
-    incr += 5;
      gp.buttons |= (1U << 9);
   } else {
     ss[2].analogWrite(PWM2, 0);
   }
 
   if (! ss[2].digitalRead(SWITCH3)) {
-    Serial.println("Switch 3 pressed");
+    Serial.println("Button 11 Pressed");
     ss[2].analogWrite(PWM3, incr);
-    incr += 5;
      gp.buttons |= (1U << 10);
   } else {
     ss[2].analogWrite(PWM3, 0);
   }
 
-  if (! ss[2].digitalRead(SWITCH4)) {
-    Serial.println("Switch 4 pressed");
+if (! ss[2].digitalRead(SWITCH4)) {
+    Serial.println("Button 12 Pressed");
     ss[2].analogWrite(PWM4, incr);
-    incr += 5;
-    gp.buttons |= (1U << 11);
+     gp.buttons |= (1U << 11);
   } else {
     ss[2].analogWrite(PWM4, 0);
   }
