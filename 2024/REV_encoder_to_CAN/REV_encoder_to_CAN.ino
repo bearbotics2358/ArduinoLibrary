@@ -22,7 +22,7 @@
 #include <SPI.h>
 
 // Controlling defines
-#define CAN_ENABLED 1
+#define CAN_ENABLED 0
 #define PRINT_VALUES 1
 
 
@@ -202,15 +202,21 @@ void loop() {
 
   // read the pulse length from the encoder:
   pulse_len = pulseIn(pulse_in_pin, HIGH);
-  angle_f = 360.0 * (pulse_len - 1.0) / 1023.0;
+  // should be 1 us to 1024 us, but my scope says 1050 us period
+  angle_f = 360.0 * (pulse_len - 1.0) / 1040.0;
+  if(angle_f < 0) {
+    angle_f = 0.0;
+  }
+  if(angle_f >= 360.0) {
+    angle_f = 0.0;
+  }
 
   packMsg();
 
 #if PRINT_VALUES
-  Serial.println();
   Serial.print("Pulse length:\t"); 
   Serial.print(pulse_len);
-  Serial.print('\t Angle');
+  Serial.print("\t Angle:\t");
   Serial.print(angle_f);
   Serial.println();
 #endif
