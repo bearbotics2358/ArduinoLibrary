@@ -17,12 +17,14 @@
 #include <Wire.h>
 #include <SPI.h>
 #include <string.h>
-#include "TOF_protocol.h"
+#include "Protocol.h"
 
 
+#define DEBUG 1
 // Which pin on the Arduino is connected to the NeoPixels?
 // On a Trinket or Gemma we suggest changing this to 1:
 #define LED_PIN    6
+
 
 // How many NeoPixels are attached to the Arduino?
 #define LED_COUNT 150
@@ -45,8 +47,9 @@ Adafruit_NeoPixel strip(LED_COUNT, PIN_EXTERNAL_NEOPIXELS, NEO_GRB + NEO_KHZ800)
 //   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
 //   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
 uint32_t colWhite = strip.Color(25,25,25);
-uint32_t color = strip.Color(255,58,1); // placeholder name
-
+uint32_t noteColor = strip.Color(255,58,1); 
+uint32_t greenReady = strip.Color(25,255,25);
+uint32_t bearBlue = strip.Color(25,15,255);
 // return true if a command has been received and is stored in rx_buff
 int GetCommand()
 {
@@ -91,34 +94,90 @@ void ProcessCommand()
 {
   // get msg_type and data_len
   int msg_type = atoi(strtok(rx_buff, ","));
+#ifdef DEBUG
+  Serial.print("msg_type: ");
+#endif
+  Serial.println(msg_type);
   int data_len = atoi(strtok(NULL, ","));
   int data0 = 0;
 
   switch(msg_type) {
-    case RIO_TOF_msgs_enum::TARGET_TYPE:
+
+    case RIO_msgs_enum::WHITE:
 #ifdef DEBUG    
-      Serial.print("9,1,TARGET_TYPE command received : ");
-#endif      
-      if(data_len) {
-        data0 = atoi(strtok(NULL, ","));
-        //cone_f = (data0 == target_type_enum::CONE) ? 1 : 0;
+      Serial.print("9,0,WHITE command received : ");
+#endif   
+    strip.clear();
+     strip.fill(colWhite);
+     strip.show();
+
 #ifdef DEBUG    
-        Serial.print(cone_f ? "CONE" : "CUBE");
+  Serial.println();
+#endif     
+    break;
+
+
+case RIO_msgs_enum::IDLE:
+#ifdef DEBUG    
+      Serial.print("9,1,IDLE command received : ");
+#endif   
+    alternatingWipe(colWhite,bearBlue,5);
+     strip.show();
+
+#ifdef DEBUG    
+  Serial.println();
+#endif     
+    break;
+
+
+    case RIO_msgs_enum::NO_COMMS:
+#ifdef DEBUG    
+      Serial.print("9,1,NO_COMMS command received : ");
 #endif      
+  // Fill along the length of the strip in various colors...
+  rainbow(10); //loss of comms
+  
       
 #ifdef DEBUG    
       Serial.println();
 #endif      
       break;
     
+
+   case RIO_msgs_enum::NOTE_ON_BOARD:
+#ifdef DEBUG    
+      Serial.print("9,3,NOTE_ON_BOARD command received : ");
+#endif      
+  // Fill along the length of the strip in various colors...
+  colorWipe(noteColor,30); //NOTE ON BOARD     
+#ifdef DEBUG    
+      Serial.println();
+#endif      
+      break;
+
+
+
+   case RIO_msgs_enum::SHOOTER_READY:
+#ifdef DEBUG    
+      Serial.print("9,5,SHOOTER_READY command received : ");
+#endif      
+  // Fill along the length of the strip in various colors...
+  theaterChase(greenReady,50);
+  colorWipe(greenReady,2);
+#ifdef DEBUG    
+      Serial.println();
+#endif      
+      break;
+
+
     default:
 #ifdef DEBUG    
-      Serial.println("9,1,unknown command");
+      Serial.println("9,0,unknown command");
 #endif      
       break;
   }
 }
-}
+
 
 void setup() {
   // core1 setup
@@ -128,25 +187,36 @@ void setup() {
   digitalWrite(PIN_EXTERNAL_POWER, LOW);
 
   strip.begin();
-  strip.show();
   strip.fill(colWhite);
   strip.setBrightness(50);
+  strip.show();
 
   pinMode(PIN_EXTERNAL_BUTTON, INPUT_PULLUP);
 }
 
+void noteAngle(int angle){
+   for(int i=14; i<22; i++) {
+    strip.setPixelColor(i, noteColor);         //  Set pixel's color (in RAM)
+    strip.setBrightness(220);
+    strip.show();                          //  Update strip to match
+  }
+}
 
 // loop() function -- runs repeatedly as long as board is on ---------------
 
 void loop() {
   // Fill along the length of the strip in various colors...
   //rainbow(11); loss of comms
-  for(int i=14; i<22; i++) {
-    strip.setPixelColor(i, color);         //  Set pixel's color (in RAM)
-    strip.setBrightness(220);
-    strip.show();                          //  Update strip to match
+
+  // Get and process command
+    if(GetCommand()) {
+     ProcessCommand();
   }
-}
+  
+
+    delay(5); // Small delay between polling
+  }
+
 
 // Some functions of our own for creating animated effects -----------------
 
@@ -163,20 +233,16 @@ void colorWipe(uint32_t color, int wait) {
   }
 }
 
-// Theater-marquee-style chasing lights. Pass in a color (32-bit value,
-// a la strip.Color(r,g,b) as mentioned above), and a delay time (in ms)
-// between frames.
-void theaterChase(uint32_t color, int wait) {
-  for(int a=0; a<10; a++) {  // Repeat 10 times...
-    for(int b=0; b<3; b++) { //  'b' counts from 0 to 2...
-      strip.clear();         //   Set all pixels in RAM to 0 (off)
-      // 'c' counts up from 'b' to end of strip in steps of 3...
-      for(int c=b; c<strip.numPixels(); c += 3) {
-        strip.setPixelColor(c, color); // Set pixel 'c' to value 'color'
-      }
-      strip.show(); // Update strip with new contents
-      delay(wait);  // Pause for a moment
+void alternatingWipe(uint32_t color,uint32_t colorTwo, int wait) {
+  for(int i=0; i<strip.numPixels(); i++) { // For each pixel in strip...
+    if(i%2 == 0){
+    strip.setPixelColor(i, color); 
+    }  
+    else{
+        strip.setPixelColor(i, colorTwo); 
     }
+    strip.show();                          //  Update strip to match
+    delay(wait);                           //  Pause for a moment
   }
 }
 
@@ -186,7 +252,7 @@ void rainbow(int wait) {
   // Color wheel has a range of 65536 but it's OK if we roll over, so
   // just count from 0 to 5*65536. Adding 256 to firstPixelHue each time
   // means we'll make 5*65536/256 = 1280 passes through this loop:
-  for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 256) {
+  for(long firstPixelHue = 0; firstPixelHue < 5*65536; firstPixelHue += 1024) {
     // strip.rainbow() can take a single argument (first pixel hue) or
     // optionally a few extras: number of rainbow repetitions (default 1),
     // saturation and value (brightness) (both 0-255, similar to the
@@ -200,26 +266,18 @@ void rainbow(int wait) {
   }
 }
 
+//from https://www.tweaking4all.com/hardware/arduino/adruino-led-strip-effects/#google_vignette
 
-
-// Rainbow-enhanced theater marquee. Pass delay time (in ms) between frames.
-void theaterChaseRainbow(int wait) {
-  int firstPixelHue = 0;     // First pixel starts at red (hue 0)
-  for(int a=0; a<30; a++) {  // Repeat 30 times...
+void theaterChase(uint32_t color, int wait) {
+  for(int a=0; a<10; a++) {  // Repeat 10 times...
     for(int b=0; b<3; b++) { //  'b' counts from 0 to 2...
       strip.clear();         //   Set all pixels in RAM to 0 (off)
-      // 'c' counts up from 'b' to end of strip in increments of 3...
+      // 'c' counts up from 'b' to end of strip in steps of 3...
       for(int c=b; c<strip.numPixels(); c += 3) {
-        // hue of pixel 'c' is offset by an amount to make one full
-        // revolution of the color wheel (range 65536) along the length
-        // of the strip (strip.numPixels() steps):
-        int      hue   = firstPixelHue + c * 65536L / strip.numPixels();
-        uint32_t color = strip.gamma32(strip.ColorHSV(hue)); // hue -> RGB
         strip.setPixelColor(c, color); // Set pixel 'c' to value 'color'
       }
-      strip.show();                // Update strip with new contents
-      delay(wait);                 // Pause for a moment
-      firstPixelHue += 65536 / 90; // One cycle of color wheel over 90 frames
+      strip.show(); // Update strip with new contents
+      delay(wait);  // Pause for a moment
     }
   }
 }
