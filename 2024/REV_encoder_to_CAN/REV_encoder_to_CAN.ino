@@ -293,6 +293,10 @@ void setup() {
 void loop() {
   byte sndStat = 0;
   int pulse_len = 0;
+  float pulsewidth_f = 0.0;
+  float period_f = 0.0;
+  float minpulse_f = 0.0;
+  float denominator = 0.0;
   
 #if CAN_ENABLED
   // empty RX buffer
@@ -327,7 +331,26 @@ void loop() {
     periodComplete = false;                       // Start a new period
     interrupts();
 
-    angle_f = 360.0 * (1.0 * pulsewidth) /  (1.0 * period);
+    // angle_f = 360.0 * (1.0 * pulsewidth) /  (1.0 * period);
+    // Calculate angle
+    // Cycle should be 1025 usec period
+    // Low pulse for 1 usec to start
+    // Minimum pulse width is 1 usec, indiates 0 degrees
+    // Maximum pulse width is 1024 usec, indicates 360 * (1023/1024) degrees
+    // Max angle = 360 * (period - 2 * minimum pulse width) / (period - minimum pulse width)
+    // Pulsewidth has a range of 0 to 1023
+    // And the REV Encoder has a period of 1050 usec
+    period_f = period;
+    pulsewidth_f = pulsewidth;
+    minpulse_f = period_f / 1025.0;
+    denominator = period_f - minpulse_f;
+    if(denominator > 1) { // make sure we won't divide by 0 due to bogus data
+      // angle_f = 360.0 * (pulsewidth_f - minpulse_f) / ((period_f - minpulse_f) - minpulse_f)
+      // * ((period_f - minpulse_f) - minpulse_f) / (period_f - minpulse_f)
+      angle_f = 360.0 * (pulsewidth_f - minpulse_f) / denominator;
+    } else {
+      angle_f = 0.0;
+    }
   }
 
 #if PRINT_VALUES
