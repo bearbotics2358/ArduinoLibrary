@@ -61,7 +61,10 @@ CAN ID: TTTTT MMMM MMMM AA AAAA AAAA DD DDDD
 CAN ID: T TTTT MMMM MMMM AAAA AAAA AADD DDDD 
 CAN ID: 0 1010 0000 1000 AAAA AAAA AADD DDDD 
 
-shooter: 2, tof: 3
+line follower: 1 - well, set it aside anyway
+shooter: 2
+tof: 3
+REV Through Bore Encoder angle: 4
 
 shooter:
 CAN ID: (Device Type): 01010 (Mfr ID): 0000 1000 (API ID): 00 0000 0010 (Device ID):00 0001 
@@ -72,6 +75,11 @@ which is: 0x0A080081
 tof:
 CAN ID: 0 1010 0000 1000 0000 0000 1100 0001
 which is: 0x0A0800C1 
+
+REV Through Bore Encoder angle:
+CAN ID: 01010 0000 1000 00 0000 0100 00 0001 
+CAN ID: 0 1010 0000 1000 0000 0001 0000 0001
+which is: 0x0A080101 
 
 From CANAPI.cpp:
 
@@ -86,7 +94,8 @@ static int32_t CreateCANId(CANStorage* storage, int32_t apiId) {
 
 
 */
-#define CAN_ID 0x0a080081
+
+#define CAN_ID 0x0A080101
 
 MCP_CAN CAN0(8); // Set MCP25625 CS to Arduino pin 8
 
