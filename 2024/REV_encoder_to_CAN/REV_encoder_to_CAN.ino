@@ -360,6 +360,10 @@ void loop() {
     } else {
       angle_f = 0.0;
     }
+
+    if((angle_f < 0) || (angle_f >= 360.0)) {
+      angle_f = 0;
+    }
   }
 
 #if PRINT_VALUES
