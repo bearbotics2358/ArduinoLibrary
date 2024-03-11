@@ -1,9 +1,6 @@
 /*
  * This example shows how read arcade buttons and PWM the LEDs on the Adafruit Arcade QT!
  */
-/*
- * This example shows how read arcade buttons and PWM the LEDs on the Adafruit Arcade QT!
- */
 
 #include "Adafruit_seesaw.h"
 #include <seesaw_neopixel.h>
@@ -11,12 +8,7 @@
 
 #define  DEFAULT_I2C_ADDR 0x3A
 #define BOARD_2_ADDR 0x3B
-#define BOARD_3_ADDR 0x3C
-#define BOARD_4_ADDR 0x3E
-
-#define NUM_BOARDS 4
-
-
+#define NUM_BOARDS 2
 
 
 
@@ -48,20 +40,13 @@ hid_gamepad_report_t gp;
 Adafruit_seesaw ss[NUM_BOARDS];
 
 void setup() {
-
-
-
   #if defined(ARDUINO_ARCH_MBED) && defined(ARDUINO_ARCH_RP2040)
   // Manual begin() is required on core without built-in support for TinyUSB such as mbed rp2040
   TinyUSB_Device_Init(0);
 #endif
 
   Serial.begin(115200);
-
-
-   pinMode(PIN_EXTERNAL_POWER, OUTPUT);
-  digitalWrite(PIN_EXTERNAL_POWER, HIGH);
-
+  
   //while (!Serial) delay(10);   // wait until serial port is opened
 
   Serial.println(F("Adafruit PID 5296 I2C QT 4x LED Arcade Buttons test!"));
@@ -76,16 +61,7 @@ void setup() {
     while(1) delay(10);
   }
 
-   if (!ss[2].begin(BOARD_3_ADDR)) {
-    Serial.println(F("seesaw 3 not found!"));
-    while(1) delay(10);
-  }
-
-   if (!ss[3].begin(BOARD_4_ADDR)) {
-    Serial.println(F("seesaw 4 not found!"));
-    while(1) delay(10);
-  }
-
+  
 
 
   // Notes: following commented-out functions has no affect on ESP32
@@ -136,11 +112,11 @@ uint8_t incr = 0;
 
 void loop() {
 
-    if (!usb_hid.ready()) {
-      Serial.println("HID not ready");
+   /* if (usb_hid.ready()) {
+      Serial.println("HID ready");
       return;
-    }
-    //if (!usb_hid.ready()) return;
+    }*/
+    if (!usb_hid.ready()) return;
 
   // Reset buttons
  // Serial.println("No pressing buttons");
@@ -152,37 +128,40 @@ void loop() {
   gp.ry = 0;
   gp.hat = 0;
   gp.buttons = 0;
-  incr = 255;
 
 
 
  if (! ss[0].digitalRead(SWITCH1)) {
-    Serial.println("Button 1 Pressed");
-    ss[0].analogWrite(SWITCH1, incr);
+    Serial.println("Switch 1 Pressed");
+    ss[0].analogWrite(SWITCH1, 1);
+    incr += 5;
      gp.buttons |= (1U << 0);
   } else {
     ss[0].analogWrite(PWM1, 0);
   }
   
   if (! ss[0].digitalRead(SWITCH2)) {
-    Serial.println("Button 2 pressed");
+    Serial.println("Switch 2 pressed");
     ss[0].analogWrite(PWM2, incr);
+    incr += 5;
      gp.buttons |= (1U << 1);
   } else {
     ss[0].analogWrite(PWM2, 0);
   }
   
   if (! ss[0].digitalRead(SWITCH3)) {
-    Serial.println("Button 3 pressed");
+    Serial.println("Switch 3 pressed");
     ss[0].analogWrite(PWM3, incr);
+    incr += 5;
      gp.buttons |= (1U << 2);
   } else {
     ss[0].analogWrite(PWM3, 0);
   }
   
   if (! ss[0].digitalRead(SWITCH4)) {
-    Serial.println("Button 4 pressed");
+    Serial.println("Switch 4 pressed");
     ss[0].analogWrite(PWM4, incr);
+    incr += 5;
     gp.buttons |= (1U << 3);
   } else {
     ss[0].analogWrite(PWM4, 0);
@@ -196,16 +175,18 @@ void loop() {
 
 
 if (! ss[1].digitalRead(SWITCH1)) {
-    Serial.println("Button 5 Pressed");
-    ss[1].analogWrite(PWM1, incr);
+    Serial.println("Switch 5 Pressed");
+    ss[1].analogWrite(SWITCH1, 1);
+    incr += 5;
      gp.buttons |= (1U << 4);
   } else {
     ss[1].analogWrite(PWM1, 0);
   }
   
   if (! ss[1].digitalRead(SWITCH2)) {
-    Serial.println("Button 6 pressed");
+    Serial.println("Switch 6 pressed");
     ss[1].analogWrite(PWM2, incr);
+    incr += 5;
      gp.buttons |= (1U << 5);
   } else {
     ss[1].analogWrite(PWM2, 0);
@@ -213,87 +194,24 @@ if (! ss[1].digitalRead(SWITCH1)) {
   
   if (! ss[1].digitalRead(SWITCH3)) {
     Serial.println("Switch 7 Flipped");
-    ss[1].analogWrite(SWITCH3, incr);
+    ss[1].analogWrite(PWM3, incr);
+    incr += 5;
      gp.buttons |= (1U << 6);
   } else {
     ss[1].analogWrite(PWM3, 0);
   }
   
   if (! ss[1].digitalRead(SWITCH4)) {
-    Serial.println("Button 8 pressed");
+    Serial.println("Switch 8 pressed");
     ss[1].analogWrite(PWM4, incr);
+    incr += 5;
     gp.buttons |= (1U << 7);
   } else {
     ss[1].analogWrite(PWM4, 0);
   }
 
 
-
-  if (! ss[2].digitalRead(SWITCH1)) {
-    Serial.println("Button 9 Pressed");
-    ss[2].analogWrite(PWM1, incr);
-     gp.buttons |= (1U << 8);
-  } else {
-    ss[2].analogWrite(PWM1, 0);
-  }
-
-  if (! ss[2].digitalRead(SWITCH2)) {
-    Serial.println("Button 10 Pressed");
-    ss[2].analogWrite(PWM2, incr);
-     gp.buttons |= (1U << 9);
-  } else {
-    ss[2].analogWrite(PWM2, 0);
-  }
-
-  if (! ss[2].digitalRead(SWITCH3)) {
-    Serial.println("Button 11 Pressed");
-    ss[2].analogWrite(PWM3, incr);
-     gp.buttons |= (1U << 10);
-  } else {
-    ss[2].analogWrite(PWM3, 0);
-  }
-
-if (! ss[2].digitalRead(SWITCH4)) {
-    Serial.println("Button 12 Pressed");
-    ss[2].analogWrite(PWM4, incr);
-     gp.buttons |= (1U << 11);
-  } else {
-    ss[2].analogWrite(PWM4, 0);
-  }
-
-
-  if (! ss[3].digitalRead(SWITCH1)) {
-    Serial.println("Button 13 Pressed");
-    ss[3].analogWrite(PWM1, incr);
-     gp.buttons |= (1U << 12);
-  } else {
-    ss[3].analogWrite(PWM1, 0);
-  }
-
-  if (! ss[3].digitalRead(SWITCH2)) {
-    Serial.println("Button 14 Pressed");
-    ss[3].analogWrite(PWM2, incr);
-     gp.buttons |= (1U << 13);
-  } else {
-    ss[3].analogWrite(PWM2, 0);
-  }
-
-  if (! ss[3].digitalRead(SWITCH3)) {
-    Serial.println("Button 15 Pressed");
-    ss[3].analogWrite(PWM3, incr);
-     gp.buttons |= (1U << 14);
-  } else {
-    ss[3].analogWrite(PWM3, 0);
-  }
-
-if (! ss[3].digitalRead(SWITCH4)) {
-    Serial.println("Button 16 Pressed");
-    ss[3].analogWrite(PWM4, incr);
-     gp.buttons |= (1U << 15);
-  } else {
-    ss[3].analogWrite(PWM4, 0);
-  }
-
   usb_hid.sendReport(0, &gp, sizeof(gp)); delay(10);
   delay(10);
 }
+
