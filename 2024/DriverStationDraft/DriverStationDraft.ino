@@ -13,8 +13,12 @@
 #define BOARD_2_ADDR 0x3B
 #define BOARD_3_ADDR 0x3C
 #define BOARD_4_ADDR 0x3E
+#define BOARD_5_ADDR 0x3F
+#define BOARD_6_ADDR 0x40
+#define BOARD_7_ADDR 0x41
 
-#define NUM_BOARDS 4
+
+#define NUM_BOARDS 7
 
 
 
@@ -58,11 +62,12 @@ void setup() {
 
   Serial.begin(115200);
 
+ //pinMode(PIN_EXTERNAL_POWER, OUTPUT);
+ // digitalWrite(PIN_EXTERNAL_POWER, HIGH);
 
-   pinMode(PIN_EXTERNAL_POWER, OUTPUT);
-  digitalWrite(PIN_EXTERNAL_POWER, HIGH);
 
-  //while (!Serial) delay(10);   // wait until serial port is opened
+
+ // while (!Serial) delay(10);   // wait until serial port is opened
 
   Serial.println(F("Adafruit PID 5296 I2C QT 4x LED Arcade Buttons test!"));
   
@@ -86,7 +91,19 @@ void setup() {
     while(1) delay(10);
   }
 
+   if (!ss[4].begin(BOARD_5_ADDR)) {
+    Serial.println(F("seesaw 5 not found!"));
+    while(1) delay(10);
+  }
 
+   if (!ss[5].begin(BOARD_6_ADDR)) {
+    Serial.println(F("seesaw 6 not found!"));
+    while(1) delay(10);
+  }
+ if (!ss[6].begin(BOARD_7_ADDR)) {
+    Serial.println(F("seesaw 7 not found!"));
+    while(1) delay(10);
+  }
 
   // Notes: following commented-out functions has no affect on ESP32
   usb_hid.setPollInterval(2);
@@ -265,7 +282,7 @@ if (! ss[2].digitalRead(SWITCH4)) {
   if (! ss[3].digitalRead(SWITCH1)) {
     Serial.println("Button 13 Pressed");
     ss[3].analogWrite(PWM1, incr);
-     gp.buttons |= (1U << 12);
+  //   gp.buttons |= (1U << 12);
   } else {
     ss[3].analogWrite(PWM1, 0);
   }
@@ -292,6 +309,101 @@ if (! ss[3].digitalRead(SWITCH4)) {
      gp.buttons |= (1U << 15);
   } else {
     ss[3].analogWrite(PWM4, 0);
+  }
+
+
+
+if (! ss[4].digitalRead(SWITCH1)) {
+  Serial.println("Button 17 Pressed");
+  ss[4].analogWrite(PWM1, incr);
+     gp.buttons |= (1U << 16);
+  } else {
+    ss[4].analogWrite(PWM1, 0);
+  }
+ if (! ss[4].digitalRead(SWITCH2)) {
+    Serial.println("Button 18 Pressed");
+    ss[4].analogWrite(PWM2, incr);
+     gp.buttons |= (1U << 17);
+  } else {
+    ss[4].analogWrite(PWM2, 0);
+  }
+ if (! ss[4].digitalRead(SWITCH3)) {
+    Serial.println("Button 19 Pressed");
+    ss[4].analogWrite(PWM3, incr);
+     gp.buttons |= (1U << 18);
+  } else {
+    ss[4].analogWrite(PWM3, 0);
+  }
+if (! ss[4].digitalRead(SWITCH4)) {
+    Serial.println("Button 20 Pressed");
+    ss[4].analogWrite(PWM4, incr);
+     gp.buttons |= (1U << 19);
+  } else {
+    ss[4].analogWrite(PWM4, 0);
+  }
+
+
+
+
+  if (! ss[5].digitalRead(SWITCH1)) {
+  Serial.println("Button 21 Pressed");
+  ss[5].analogWrite(PWM1, incr);
+     gp.buttons |= (1U << 20);
+  } else {
+    ss[5].analogWrite(PWM1, 0);
+  }
+ if (! ss[5].digitalRead(SWITCH2)) {
+    Serial.println("Button 22 Pressed");
+    ss[5].analogWrite(PWM2, incr);
+     gp.buttons |= (1U << 21);
+  } else {
+    ss[5].analogWrite(PWM2, 0);
+  }
+ if (! ss[5].digitalRead(SWITCH3)) {
+    Serial.println("Button 23 Pressed");
+    ss[5].analogWrite(PWM3, incr);
+     gp.buttons |= (1U << 22);
+  } else {
+    ss[5].analogWrite(PWM3, 0);
+  }
+if (! ss[5].digitalRead(SWITCH4)) {
+    Serial.println("Button 24 Pressed");
+    ss[5].analogWrite(PWM4, incr);
+     gp.buttons |= (1U << 23);
+  } else {
+    ss[5].analogWrite(PWM4, 0);
+  }
+
+
+
+
+  if (! ss[6].digitalRead(SWITCH1)) {
+  Serial.println("Button 25 Pressed");
+  ss[6].analogWrite(PWM1, incr);
+     gp.buttons |= (1U << 24);
+  } else {
+    ss[6].analogWrite(PWM1, 0);
+  }
+ if (! ss[6].digitalRead(SWITCH2)) {
+    Serial.println("Button 26 Pressed");
+    ss[6].analogWrite(PWM2, incr);
+     gp.buttons |= (1U << 25);
+  } else {
+    ss[6].analogWrite(PWM2, 0);
+  }
+ if (! ss[6].digitalRead(SWITCH3)) {
+    Serial.println("Button 27 Pressed");
+    ss[6].analogWrite(PWM3, incr);
+     gp.buttons |= (1U << 26);
+  } else {
+    ss[6].analogWrite(PWM3, 0);
+  }
+if (! ss[6].digitalRead(SWITCH4)) {
+    Serial.println("Button 13 Pressed");
+    ss[6].analogWrite(PWM4, incr);
+     gp.buttons |= (1U << 12);
+  } else {
+    ss[6].analogWrite(PWM4, 0);
   }
 
   usb_hid.sendReport(0, &gp, sizeof(gp)); delay(10);
