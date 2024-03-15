@@ -50,6 +50,7 @@ hid_gamepad_report_t gp;
 
 
 Adafruit_seesaw ss[NUM_BOARDS];
+int currentAutoSeq = 0;
 
 void setup() {
 
@@ -109,7 +110,11 @@ void setup() {
   usb_hid.setPollInterval(2);
    usb_hid.setReportDescriptor(desc_hid_report, sizeof(desc_hid_report));
 
+ while(!usb_hid.begin()){
+  Serial.println("HID FAILED :(");
+  delay(5000);
   usb_hid.begin();
+ }
 
   // wait until device mounted
   while (!TinyUSBDevice.mounted()) delay(1);
@@ -146,18 +151,20 @@ for(int i = 0; i<NUM_BOARDS; i++){\
   ss[i].analogWrite(PWM2, 127);
   ss[i].analogWrite(PWM3, 127);
   ss[i].analogWrite(PWM4, 127);
+  usb_hid.ready();
 }
+delay(5000);
 }
 
 uint8_t incr = 0;
 
 void loop() {
 
-    if (!usb_hid.ready()) {
+ /*while (!usb_hid.ready()) {
       Serial.println("HID not ready");
-      return;
-    }
-    //if (!usb_hid.ready()) return;
+      delay(2000);
+    } */
+  //  if (!usb_hid.ready()) return;
 
   // Reset buttons
  // Serial.println("No pressing buttons");
@@ -398,10 +405,11 @@ if (! ss[5].digitalRead(SWITCH4)) {
   } else {
     ss[6].analogWrite(PWM3, 0);
   }
-if (! ss[6].digitalRead(SWITCH4)) {
+if ((! ss[6].digitalRead(SWITCH4)) /*|| (currentAutoSeq == 0)*/ ){
     Serial.println("Button 13 Pressed");
     ss[6].analogWrite(PWM4, incr);
      gp.buttons |= (1U << 12);
+   //  currentAutoSeq = 0;
   } else {
     ss[6].analogWrite(PWM4, 0);
   }
