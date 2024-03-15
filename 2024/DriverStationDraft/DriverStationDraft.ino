@@ -63,6 +63,20 @@ void setup() {
 
   Serial.begin(115200);
 
+    // Notes: following commented-out functions has no affect on ESP32
+  usb_hid.setPollInterval(2);
+   usb_hid.setReportDescriptor(desc_hid_report, sizeof(desc_hid_report));
+
+ while(!usb_hid.begin()){
+  Serial.println("HID FAILED :(");
+  delay(5000);
+  usb_hid.begin();
+ }
+
+  // wait until device mounted
+  while (!TinyUSBDevice.mounted()) delay(1);
+
+
  //pinMode(PIN_EXTERNAL_POWER, OUTPUT);
  // digitalWrite(PIN_EXTERNAL_POWER, HIGH);
 
@@ -106,18 +120,6 @@ void setup() {
     while(1) delay(10);
   }
 
-  // Notes: following commented-out functions has no affect on ESP32
-  usb_hid.setPollInterval(2);
-   usb_hid.setReportDescriptor(desc_hid_report, sizeof(desc_hid_report));
-
- while(!usb_hid.begin()){
-  Serial.println("HID FAILED :(");
-  delay(5000);
-  usb_hid.begin();
- }
-
-  // wait until device mounted
-  while (!TinyUSBDevice.mounted()) delay(1);
 
   Serial.println("Adafruit TinyUSB HID Gamepad example");
   delay(2000);
@@ -153,7 +155,6 @@ for(int i = 0; i<NUM_BOARDS; i++){\
   ss[i].analogWrite(PWM4, 127);
   usb_hid.ready();
 }
-delay(5000);
 }
 
 uint8_t incr = 0;
