@@ -61,7 +61,7 @@ void setup() {
   TinyUSB_Device_Init(0);
 #endif
 
-  Serial.begin(115200);
+ // Serial.begin(115200);
 
     // Notes: following commented-out functions has no affect on ESP32
   usb_hid.setPollInterval(2);
