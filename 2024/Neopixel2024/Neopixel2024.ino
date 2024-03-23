@@ -74,10 +74,11 @@ int GetCommand() {
         // no command
         continue;
       }
-      rx_buff[rx_index + 1] = 0;
+      // replace with a string terminator to enable printing
+      rx_buff[rx_index] = 0;
 #ifdef DEBUG
-      Serial.print("9,1,cmd = ");
-      Serial.println(rx_buff);
+      // Serial.print("9,1,cmd = ");
+      // Serial.println(rx_buff);
 #endif
 
       // process command
@@ -100,9 +101,9 @@ void ProcessCommand() {
   // get msg_type and data_len
   int msg_type = atoi(strtok(rx_buff, ","));
 #ifdef DEBUG
-  Serial.print("msg_type: ");
+  // Serial.print("msg_type: ");
 #endif
-  Serial.println(msg_type);
+  // Serial.println(msg_type);
   int data_len = atoi(strtok(NULL, ","));
   int data0 = 0;
 
@@ -110,7 +111,7 @@ void ProcessCommand() {
 
     case RIO_msgs_enum::WHITE:
 #ifdef DEBUG
-      Serial.print("9,0,WHITE command received : ");
+      Serial.print("9,0,WHITE command received");
 #endif
       strip.clear();
       strip.fill(colWhite);
@@ -124,7 +125,7 @@ void ProcessCommand() {
 
     case RIO_msgs_enum::IDLE:
 #ifdef DEBUG
-      Serial.print("9,1,IDLE command received : ");
+      Serial.print("9,1,IDLE command received");
 #endif
       alternatingWipe(brightWhite, bearCyan, 5);
       strip.show();
@@ -137,8 +138,16 @@ void ProcessCommand() {
 
     case RIO_msgs_enum::NO_COMMS:
 #ifdef DEBUG
-      Serial.print("9,1,NO_COMMS command received : ");
+      Serial.print("9,1,NO_COMMS command received");
 #endif
+
+      // temp to have another color w/o animations
+      strip.clear();
+      strip.fill(greenReady);
+      strip.show();
+      break;
+      
+      
       // Fill along the length of the strip in various colors...
       rainbow(35);  //loss of comms
 
@@ -158,7 +167,7 @@ void ProcessCommand() {
 
     case RIO_msgs_enum::NOTE_ON_BOARD:
 #ifdef DEBUG
-      Serial.print("9,3,NOTE_ON_BOARD command received : ");
+      Serial.print("9,3,NOTE_ON_BOARD command received");
 #endif
       // Fill along the length of the strip in various colors...
       colorWipe(greenReady, 30);  //NOTE ON BOARD
@@ -171,7 +180,7 @@ void ProcessCommand() {
 
     case RIO_msgs_enum::SHOOTER_READY:
 #ifdef DEBUG
-      Serial.print("9,5,SHOOTER_READY command received : ");
+      Serial.print("9,5,SHOOTER_READY command received");
 #endif
       // Fill along the length of the strip in various colors...
       theaterChase(bearBlue, 65);
