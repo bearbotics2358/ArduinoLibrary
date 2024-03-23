@@ -35,6 +35,7 @@
 char rx_buff[MAXLEN];
 int rx_index = 0;
 
+
 // Declare our NeoPixel strip object:
 
 // Declare our NeoPixel strip object:
@@ -59,13 +60,14 @@ bool newCommand = false;
 // return true if a command has been received and is stored in rx_buff
 int GetCommand() {
   int ret = 0;
+  int i;
 
   // get command if there is one
   // every time called, and every time through loop, get command chars
   // if available
   // when '\r' (or '\n') found, process command
   // throw away remaining '\r' or '\n'
-  while (Serial.available() > 0) {
+  while (!newCommand && (Serial.available() > 0)) {
     rx_buff[rx_index] = Serial.read();
     if ((rx_buff[rx_index] == '\r')
         || (rx_buff[rx_index] == '\n')) {
@@ -74,14 +76,24 @@ int GetCommand() {
         // no command
         continue;
       }
-      rx_buff[rx_index + 1] = 0;
+      // replace with a string terminator to enable printing
+      rx_buff[rx_index] = 0;
 #ifdef DEBUG
-      Serial.print("9,1,cmd = ");
-      Serial.println(rx_buff);
+      // Serial.print("9,1,cmd = ");
+      // Serial.println(rx_buff);
 #endif
 
+      // print buffer back in HEX for debugging 
+      Serial.print("cmd: ");
+      for(i = 0; i <= rx_index; i++) {
+        Serial.print(rx_buff[i], HEX);
+        Serial.print(" ");
+      }
+      Serial.println();
+      
       // process command
       ret = 1;
+      newCommand = true;
 
       // reset for next command
       rx_index = 0;
@@ -96,7 +108,17 @@ int GetCommand() {
 }
 
 void ProcessCommand() {
+  int i;
+  
   newCommand = false;
+  
+      // print buffer back in HEX for debugging 
+      Serial.print("cmd: ");
+      for(i = 0; i <= rx_index; i++) {
+        Serial.print(rx_buff[i], HEX);
+        Serial.print(" ");
+      }
+      
   // get msg_type and data_len
   int msg_type = atoi(strtok(rx_buff, ","));
 #ifdef DEBUG
@@ -110,7 +132,7 @@ void ProcessCommand() {
 
     case RIO_msgs_enum::WHITE:
 #ifdef DEBUG
-      Serial.print("9,0,WHITE command received : ");
+      Serial.print("9,0,WHITE command received");
 #endif
       strip.clear();
       strip.fill(colWhite);
@@ -124,7 +146,7 @@ void ProcessCommand() {
 
     case RIO_msgs_enum::IDLE:
 #ifdef DEBUG
-      Serial.print("9,1,IDLE command received : ");
+      Serial.println("9,1,IDLE command received");
 #endif
       alternatingWipe(brightWhite, bearCyan, 5);
       strip.show();
@@ -137,8 +159,16 @@ void ProcessCommand() {
 
     case RIO_msgs_enum::NO_COMMS:
 #ifdef DEBUG
-      Serial.print("9,1,NO_COMMS command received : ");
+      Serial.println("9,1,NO_COMMS command received");
 #endif
+
+      // temp to have another color w/o animations
+      // strip.clear();
+      // strip.fill(greenReady);
+      // strip.show();
+      // break;
+      
+      
       // Fill along the length of the strip in various colors...
       rainbow(35);  //loss of comms
 
@@ -158,7 +188,7 @@ void ProcessCommand() {
 
     case RIO_msgs_enum::NOTE_ON_BOARD:
 #ifdef DEBUG
-      Serial.print("9,3,NOTE_ON_BOARD command received : ");
+      Serial.print("9,3,NOTE_ON_BOARD command received");
 #endif
       // Fill along the length of the strip in various colors...
       colorWipe(greenReady, 30);  //NOTE ON BOARD
@@ -171,7 +201,7 @@ void ProcessCommand() {
 
     case RIO_msgs_enum::SHOOTER_READY:
 #ifdef DEBUG
-      Serial.print("9,5,SHOOTER_READY command received : ");
+      Serial.print("9,5,SHOOTER_READY command received");
 #endif
       // Fill along the length of the strip in various colors...
       theaterChase(bearBlue, 65);
