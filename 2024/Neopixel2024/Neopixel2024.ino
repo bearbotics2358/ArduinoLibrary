@@ -51,7 +51,7 @@ Adafruit_NeoPixel strip(LED_COUNT, PIN_EXTERNAL_NEOPIXELS, NEO_GRB + NEO_KHZ800)
 uint32_t colWhite = strip.Color(25, 25, 25);
 uint32_t brightWhite = strip.Color(255, 255, 255);
 uint32_t noteColor = strip.Color(255, 58, 1);
-uint32_t greenReady = strip.Color(25, 255, 25);
+uint32_t greenReady = strip.Color(25, 155, 25);
 uint32_t bearBlue = strip.Color(5, 15, 255);
 uint32_t bearCyan = strip.Color(25, 35, 215);
 
@@ -191,7 +191,7 @@ void ProcessCommand() {
       Serial.print("9,3,NOTE_ON_BOARD command received");
 #endif
       // Fill along the length of the strip in various colors...
-      colorWipe(greenReady, 30);  //NOTE ON BOARD
+        RunningLights(0,0xff,0, 50);  //NOTE ON BOARD
 #ifdef DEBUG
       Serial.println();
 #endif
@@ -343,8 +343,32 @@ void theaterChase(uint32_t color, int wait) {
       newCommand = true;
       break;
      }
+     
       delay(wait);   // Pause for a moment
      }
+    }
+  }
+}
+
+void RunningLights(byte red, byte green, byte blue, int WaveDelay) {
+  int Position=0;
+  strip.fill(greenReady);
+ while (!newCommand){
+  for(int j=0; j<LED_COUNT*2; j++)
+  {
+      Position++; // = 0; //Position + Rate;
+      for(int i=0; i<LED_COUNT; i++) {
+        strip.setPixelColor(i,((sin(i+Position) * 127 + 128)/255)*red,
+                   ((sin(i+Position) * 127 + 128)/255)*green,
+                   ((sin(i+Position) * 127 + 128)/255)*blue);
+      }
+     
+      strip.show();
+       if (GetCommand()) {
+      newCommand = true;
+      break;
+     }
+      delay(WaveDelay);
     }
   }
 }
