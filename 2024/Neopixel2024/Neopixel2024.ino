@@ -35,6 +35,7 @@
 char rx_buff[MAXLEN];
 int rx_index = 0;
 
+
 // Declare our NeoPixel strip object:
 
 // Declare our NeoPixel strip object:
@@ -59,13 +60,14 @@ bool newCommand = false;
 // return true if a command has been received and is stored in rx_buff
 int GetCommand() {
   int ret = 0;
+  int i;
 
   // get command if there is one
   // every time called, and every time through loop, get command chars
   // if available
   // when '\r' (or '\n') found, process command
   // throw away remaining '\r' or '\n'
-  while (Serial.available() > 0) {
+  while (!newCommand && (Serial.available() > 0)) {
     rx_buff[rx_index] = Serial.read();
     if ((rx_buff[rx_index] == '\r')
         || (rx_buff[rx_index] == '\n')) {
@@ -81,8 +83,17 @@ int GetCommand() {
       // Serial.println(rx_buff);
 #endif
 
+      // print buffer back in HEX for debugging 
+      Serial.print("cmd: ");
+      for(i = 0; i <= rx_index; i++) {
+        Serial.print(rx_buff[i], HEX);
+        Serial.print(" ");
+      }
+      Serial.println();
+      
       // process command
       ret = 1;
+      newCommand = true;
 
       // reset for next command
       rx_index = 0;
@@ -97,13 +108,23 @@ int GetCommand() {
 }
 
 void ProcessCommand() {
+  int i;
+  
   newCommand = false;
+  
+      // print buffer back in HEX for debugging 
+      Serial.print("cmd: ");
+      for(i = 0; i <= rx_index; i++) {
+        Serial.print(rx_buff[i], HEX);
+        Serial.print(" ");
+      }
+      
   // get msg_type and data_len
   int msg_type = atoi(strtok(rx_buff, ","));
 #ifdef DEBUG
-  // Serial.print("msg_type: ");
+  Serial.print("msg_type: ");
 #endif
-  // Serial.println(msg_type);
+  Serial.println(msg_type);
   int data_len = atoi(strtok(NULL, ","));
   int data0 = 0;
 
@@ -125,7 +146,7 @@ void ProcessCommand() {
 
     case RIO_msgs_enum::IDLE:
 #ifdef DEBUG
-      Serial.print("9,1,IDLE command received");
+      Serial.println("9,1,IDLE command received");
 #endif
       alternatingWipe(brightWhite, bearCyan, 5);
       strip.show();
@@ -138,14 +159,14 @@ void ProcessCommand() {
 
     case RIO_msgs_enum::NO_COMMS:
 #ifdef DEBUG
-      Serial.print("9,1,NO_COMMS command received");
+      Serial.println("9,1,NO_COMMS command received");
 #endif
 
       // temp to have another color w/o animations
-      strip.clear();
-      strip.fill(greenReady);
-      strip.show();
-      break;
+      // strip.clear();
+      // strip.fill(greenReady);
+      // strip.show();
+      // break;
       
       
       // Fill along the length of the strip in various colors...
