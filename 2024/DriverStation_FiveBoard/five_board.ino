@@ -76,8 +76,8 @@ void setup() {
   while (!TinyUSBDevice.mounted()) delay(1);
 
 
- //pinMode(PIN_EXTERNAL_POWER, OUTPUT);
- // digitalWrite(PIN_EXTERNAL_POWER, HIGH);
+ pinMode(PIN_EXTERNAL_POWER, OUTPUT);
+  digitalWrite(PIN_EXTERNAL_POWER, HIGH);
 
 
 
@@ -283,7 +283,7 @@ if (! ss[2].digitalRead(SWITCH4)) {
   if (! ss[3].digitalRead(SWITCH1)) {
     // Serial.println("Button 13 Pressed");
     ss[3].analogWrite(PWM1, incr);
-  //   gp.buttons |= (1U << 12);
+     gp.buttons |= (1U << 12);
   } else {
     ss[3].analogWrite(PWM1, 0);
   }
