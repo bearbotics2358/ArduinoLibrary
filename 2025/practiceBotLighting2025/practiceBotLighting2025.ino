@@ -182,13 +182,6 @@ void ProcessCommand() {
       break;
 
 
-
-
-
-
-
-
-
     case RIO_msgs_enum::ELEVATOR_L1:
 #ifdef DEBUG
       Serial.print("9,3,ELEVATOR_L1 command received");
@@ -251,6 +244,21 @@ void ProcessCommand() {
       // Fill along the length of the strip in various colors...
      //fireworks(superPink, 40, 50, 3,20); draft one
      snakeAnimation(piss, 31, 12);
+
+#ifdef DEBUG
+      Serial.println();
+#endif
+      break;
+
+
+
+    case RIO_msgs_enum::GOTOMCDONALDS:
+#ifdef DEBUG
+      Serial.print("9,8,GOTOMCDONALDS command received");
+#endif
+      // Fill along the length of the strip in various colors...
+     //fireworks(superPink, 40, 50, 3,20); draft one
+     alternatingWipe(matthewRed, piss, 12);
 
 #ifdef DEBUG
       Serial.println();
