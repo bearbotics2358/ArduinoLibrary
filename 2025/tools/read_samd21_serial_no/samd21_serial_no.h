@@ -2,4 +2,11 @@
 
 #include <Arduino.h>
 
-void read_samd21_serial_no(uint32_t serial[]);
+struct serialNum {
+  uint32_t sN[4];
+} ;
+
+void clear_samd21_serial_num(struct serialNum *pnumber);
+void read_samd21_serial_num(struct serialNum *pnumber);
+void printSerialNum(struct serialNum number);
+int checkSerialNum(struct serialNum a, struct serialNum b);

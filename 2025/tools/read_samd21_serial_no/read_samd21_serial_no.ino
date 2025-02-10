@@ -5,7 +5,7 @@
 
 #include "samd21_serial_no.h"
 
-uint32_t serial[4];
+struct serialNum serialNumber;
 
 void setup() {
   int i;
@@ -14,21 +14,16 @@ void setup() {
   pinMode(13, OUTPUT);
   digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
 
-  for(i = 0; i < 4; i++) {
-    serial[i] = 0;
-  }
+  clear_samd21_serial_num(&serialNumber);
 
   Serial.begin(9600);
 }
 
 void loop() {
   Serial.println();
-  read_samd21_serial_no(serial);
+  read_samd21_serial_num(&serialNumber);
   Serial.println("The serial number is: ");
-  Serial.print("serial[0]: 0x"); Serial.println(serial[0], HEX);
-  Serial.print("serial[1]: 0x"); Serial.println(serial[1], HEX);
-  Serial.print("serial[2]: 0x"); Serial.println(serial[2], HEX);
-  Serial.print("serial[3]: 0x"); Serial.println(serial[3], HEX);
+  printSerialNum(serialNumber);
   
   digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
   delay(500);              // wait for a second
