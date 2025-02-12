@@ -52,7 +52,31 @@
 #include <mcp_can.h>
 #include <SPI.h>
 
+#include "SAMD21SerialNumber.h"
+
 TwoWire myWire(&sercom0, A3, A4);
+
+SAMD21SerialNumber sn;
+
+
+
+
+/*
+ * TO DO's:
+ * - add NeoPixel library, strip, and initialization code
+ * 
+ * 
+ * 
+ * 
+ * 
+ * 
+ */
+
+
+
+
+
+
 
 // Controlling defines
 #define CAN_ENABLED 1
@@ -61,6 +85,8 @@ TwoWire myWire(&sercom0, A3, A4);
 // CAN0 RESET, INT
 #define CAN0_RST 31   // MCP25625 RESET connected to Arduino pin 31
 #define CAN0_INT 30  // Set INT to Arduino pin 30
+
+#define NUMPIXELS 2 // Number of LEDs in strip
 
 // CAN variables
 unsigned long t_prev = 0;  // Variable to store last execution time
@@ -136,6 +162,8 @@ int ledPin = 13;      // select the pin for the LED
 
 int pulse_in_pin = 12; // the pin for the connection to the REV encoder pulse output
 
+int board = -1; // will be used to determine which board we are using
+
 // trying to get motor to run
 int tx_msg_count = 0;
 
@@ -148,6 +176,18 @@ volatile uint16_t isrPeriod;
 volatile uint16_t isrPulsewidth;
 uint16_t period;
 uint16_t pulsewidth;
+
+
+
+
+// TOF sensor distance
+int tofDistance[2] = {OUT_OF_RANGE, OUT_OF_RANGE};
+// set if the TOF sensor is discovered
+int tofExists[2] = {0, 0};
+
+//Time of Flight Stuff
+Adafruit_VL53L0X lox0 = Adafruit_VL53L0X();
+Adafruit_VL53L0X lox1 = Adafruit_VL53L0X();
 
 
 // pack data into CAN message
@@ -167,6 +207,53 @@ void packMsg()
   data[6] = 0x00;
   data[7] = 0x00;
 }
+
+
+// pack message into format used by 2 steering and 1 shooter to RoboRio
+void packMsgShooter()
+{
+  int i;
+  long ltemp = 0;
+  int distance = 0;
+  
+  data[0] = (sensorValue0 >> 8) & 0x00ff;
+  data[1] = sensorValue0 & 0x00ff;
+
+  data[2] = (sensorValue1 >> 8) & 0x00ff;
+  data[3] = sensorValue1 & 0x00ff;
+  
+  data[4] = (sensorValue2 >> 8) & 0x00ff;
+  data[5] = sensorValue2 & 0x00ff;
+
+  data[6] = 0x00;
+  data[7] = 0x00;
+}
+
+// pack message into format used by 2 steering and 2 time of flight to RoboRio
+void packMsgTOF()
+{
+  int i;
+  long ltemp = 0;
+  int distance = 0;
+  
+  data[0] = (sensorValue0 >> 8) & 0x00ff;
+  data[1] = sensorValue0 & 0x00ff;
+  
+  data[2] = (sensorValue1 >> 8) & 0x00ff;
+  data[3] = sensorValue1 & 0x00ff;
+  
+  data[4] = (tofDistance[0] >> 8) & 0x00ff;
+  data[5] = tofDistance[0] & 0x00ff;
+
+  // Then pack the TOF distance into the next 16 bits.
+  // This is a unsigned value, in units of mm
+  data[6] = (tofDistance[1] >> 8) & 0xff;
+  data[7] = tofDistance[1] & 0xff;
+}
+
+
+
+
 
 void init_timer_capture() {
   PM->APBCMASK.reg |= PM_APBCMASK_EVSYS;     // Switch on the event system peripheral
@@ -318,6 +405,16 @@ void setup() {
 
   digitalWrite(ledPin, 1);
 
+  /*
+  strip.begin(); 
+  // LEDs RED at powerup, until board is discovered
+  for(i = 0; i < NUMPIXELS; i++) {
+    strip.setPixelColor(i, 0x005000);      
+  }
+  strip.show();                     // Refresh strip
+*/
+
+  /*
   Serial.print("CAN ID: 0x");
   Serial.print((CAN_ID >> 24) & 0x00ff, HEX);
   Serial.print(" ");
@@ -327,7 +424,105 @@ void setup() {
   Serial.print(" ");
   Serial.print((CAN_ID ) & 0x00ff, HEX);
   Serial.println();
+  */
 
+
+
+  initialization();
+  do {
+    sn.read();
+    sn.print();
+    for(int i = 0; i < NUM_OF_CONFIG; i++) {
+      // need to fix config to use serial number Class 
+      if(sn.checkSerialNum(conf[i].sN)){
+        board = i;
+      }
+    }
+    if(board < 0) {
+      // board not found
+      // blink leds
+      for(i = 0; i < NUMPIXELS; i++) {
+        strip.setPixelColor(i, 0x000000);      
+      }
+      strip.show();
+      delay(500);
+
+      for(i = 0; i < NUMPIXELS; i++) {
+        strip.setPixelColor(i, 0x005000);      
+      }
+      strip.show();
+      delay(500);
+    }
+  } while(board < 0);
+
+  // need to update to board types we plan to have
+  // are Coral and Climber using the same message type?
+  if(conf[board].type == TIMEOFFLIGHT) {
+    //Time of Flight Stuff 
+    Serial.print("TIME OF FLIGHT MODE:");
+    Serial.println("Adafruit VL53L0X test");
+    pinMode(TOF_SHUTDOWN, OUTPUT);
+    digitalWrite(TOF_SHUTDOWN, 0); // disables 2nd sensor
+    delay(100);
+    if (!lox0.begin(TOF_ADDRESS)) {
+      Serial.println(F("Failed to boot VL53L0X 0"));
+    } else {
+      tofExists[0] = 1;
+    }
+    Serial.println("About to set TOF_SHUTDOWN pin to 1");
+    digitalWrite(TOF_SHUTDOWN, 1);
+    Serial.println(" pin is set now");
+    if (!lox1.begin()) {
+      Serial.println(F("Failed to boot VL53L0X 1"));
+    } else {
+      tofExists[1] = 1;
+    }
+    // power 
+    Serial.println(F("VL53L0X API Simple Ranging example\n\n"));
+  }
+  else {
+    Serial.println("SHOOTER MODE:");
+  }
+
+  // initialize LEDs to blue
+  for(i = 0; i < NUMPIXELS; i++) {
+    strip.setPixelColor(i, 0x000050);      
+  }
+
+  // set LED corresonding to board number to green
+  strip.setPixelColor(board, 0x500000);
+  strip.show();                     // Refresh strip
+  delay(1000);
+
+  // initialize LEDs to blue
+  for(i = 0; i < NUMPIXELS; i++) {
+    strip.setPixelColor(i, 0x000050);      
+  }
+
+  Serial.print("CAN ID: 0x");
+  Serial.print((conf[board].canId >> 24) & 0x00ff, HEX);
+  Serial.print(" ");
+  Serial.print((conf[board].canId >> 16) & 0x00ff, HEX);
+  Serial.print(" ");
+  Serial.print((conf[board].canId >> 8) & 0x00ff, HEX);
+  Serial.print(" ");
+  Serial.print((conf[board].canId ) & 0x00ff, HEX);
+  Serial.println();
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // for Thru Bore Encoder
   // initialize pulse capture
   init_timer_capture();
 
@@ -361,6 +556,58 @@ void loop() {
     return;
   }
   t_prev = millis();
+
+
+
+
+  if(conf[board].type == TIMEOFFLIGHT) {
+    // Time of Flight Stuff
+    VL53L0X_RangingMeasurementData_t measure;
+    
+    if(tofExists[0]) {
+      // Serial.print("Reading a measurement (sensor 0)... ");
+      lox0.rangingTest(&measure, false); // pass in 'true' to get debug data printout!
+
+      if (measure.RangeStatus != 4) {  // phase failures have incorrect data
+        tofDistance[0] = measure.RangeMilliMeter;
+        // Serial.print("Distance (mm): ");
+        // Serial.println(measure.RangeMilliMeter);
+      } else {
+        tofDistance[0] = OUT_OF_RANGE;
+        // Serial.println(" out of range ");
+      }
+    }
+    
+    if(tofExists[1]) {
+      // Serial.print("Reading a measurement (sensor 1)... ");
+      lox1.rangingTest(&measure, false); // pass in 'true' to get debug data printout!
+
+      if (measure.RangeStatus != 4) {  // phase failures have incorrect data
+        tofDistance[1] = measure.RangeMilliMeter;
+        // Serial.print("Distance (mm): ");
+        // Serial.println(measure.RangeMilliMeter);
+      } else {
+        tofDistance[1] = OUT_OF_RANGE;
+        // Serial.println(" out of range ");
+      }
+    }
+  }
+  
+  // pack message for protocol from Feather CAN to RoboRio
+  if(conf[board].type == TIMEOFFLIGHT) {
+    packMsgTOF();
+  }
+  else {
+    packMsgShooter();
+  }
+
+
+
+
+
+
+
+
 
   // read the pulse length from the encoder:
   /*
@@ -418,12 +665,18 @@ void loop() {
 
   packMsg();
 
+
+
+
+
+
 #if CAN_ENABLED
   
   // send Extended msg
   // no: byte sndStat = CAN0.sendMsgBuf(conf[board].canId | 0x80000000, 1, 8, data);
   // byte sndStat = CAN0.sendMsgBuf(conf[board].canId, 1, 8, data); // ITS THIS ONE!! :)
-  sndStat = CAN0.sendMsgBuf(CAN_ID, 1, 8, data); // ITS THIS ONE!! :)
+  // sndStat = CAN0.sendMsgBuf(CAN_ID, 1, 8, data); // ITS THIS ONE!! :)
+  byte sndStat = CAN0.sendMsgBuf(conf[board].canId, 1, 8, tx_test_data); // ITS THIS ONE!! :)
 
   /*
   for(i = 4; i < 6; i++) {

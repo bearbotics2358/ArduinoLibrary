@@ -1,11 +1,11 @@
-/* read_samd21_serial_no - read and display the serial number of the SAMD21 chip
+/* read_SAMD21_serial_no - read and display the serial number of the SAMD21 chip
  *  
  *  2/20/2020 Bob D'Avello
  */
 
-#include "samd21_serial_no.h"
+#include "SAMD21SerialNumber.h"
 
-struct serialNum serialNumber;
+SAMD21SerialNumber sn;
 
 void setup() {
   int i;
@@ -14,16 +14,14 @@ void setup() {
   pinMode(13, OUTPUT);
   digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
 
-  clear_samd21_serial_num(&serialNumber);
-
   Serial.begin(9600);
 }
 
 void loop() {
   Serial.println();
-  read_samd21_serial_num(&serialNumber);
+  sn.read();
   Serial.println("The serial number is: ");
-  printSerialNum(serialNumber);
+  sn.print();
   
   digitalWrite(13, HIGH);   // turn the LED on (HIGH is the voltage level)
   delay(500);              // wait for a second
