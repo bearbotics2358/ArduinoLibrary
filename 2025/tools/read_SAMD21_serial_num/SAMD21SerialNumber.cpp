@@ -19,6 +19,21 @@ void SAMD21SerialNumber::read()
   sN[3] = *p;
 }
 
+void SAMD21SerialNumber::set(uint32_t sn0, uint32_t sn1, uint32_t sn2, uint32_t sn3)
+{
+  sN[0] = sn0;
+  sN[1] = sn1;
+  sN[2] = sn2;
+  sN[3] = sn3;
+}
+
+void SAMD21SerialNumber::set(uint32_t data[4])
+{
+  for(int i = 0; i < 4; i++) {
+    sN[i] = data[i];
+  }
+}
+
 void SAMD21SerialNumber::clear() {
   int i;
   

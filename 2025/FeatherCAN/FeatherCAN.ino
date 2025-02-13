@@ -49,7 +49,7 @@
 
 
 // Controlling defines
-#define CAN_ENABLED 0
+#define CAN_ENABLED 1
 #define PRINT_VALUES 1
 
 
@@ -64,6 +64,7 @@
 #include "SAMD21SerialNumber.h"
 #include "ThruBoreEncoder.h"
 
+#include "PackMessage.h"
 
 TwoWire myWire(&sercom0, A3, A4); // 2nd I2C interdace
 
@@ -127,6 +128,31 @@ extern float angle_f;
 
 
 
+void CAN_setup() {
+  // CAN chip RESET line
+  pinMode(CAN0_RST, OUTPUT);
+  // Configuring pin for /INT input
+  pinMode(CAN0_INT, INPUT_PULLUP);
+  
+  // reset CAN chip
+  digitalWrite(CAN0_RST, 0);
+  delay(100);
+  digitalWrite(CAN0_RST, 1);
+  delay(500);  
+
+  // Initialize MCP25625 running at 16MHz with a baudrate of 1Mb/s and
+  // the masks and filters disabled.
+  if(CAN0.begin(MCP_ANY, CAN_1000KBPS, MCP_16MHZ) == CAN_OK) {
+    Serial.println("MCP25625 Initialized Successfully!");
+  } else {
+    Serial.println("Error Initializing MCP25625...");
+  }
+
+  CAN0.setMode(MCP_NORMAL);
+
+
+}
+
 
 
 
@@ -158,8 +184,9 @@ void setup() {
 	// Init Thru Bore Encoder if appropriate
 
 	// Init CAN
-
-  Serial.println("REV Encoder test (not yet) to CAN");
+  CAN_setup();
+  
+  Serial.println("REV Encoder test to CAN");
   
   // delay(500);
 
@@ -372,31 +399,43 @@ void loop() {
   Serial.print("Angle: ");
   Serial.println(angle_f);
 
-	// packMsg();
-
-
-
-
+	packAngleMsg(angle_f);
 
 
 #if CAN_ENABLED
   
   // send Extended msg
-  // no: byte sndStat = CAN0.sendMsgBuf(conf[board].canId | 0x80000000, 1, 8, data);
-  // byte sndStat = CAN0.sendMsgBuf(conf[board].canId, 1, 8, data); // ITS THIS ONE!! :)
-  // sndStat = CAN0.sendMsgBuf(CAN_ID, 1, 8, data); // ITS THIS ONE!! :)
-  byte sndStat = CAN0.sendMsgBuf(conf[board].canId, 1, 8, tx_test_data); // ITS THIS ONE!! :)
+  sndStat = CAN0.sendMsgBuf(CAN_ID, 1, 8, data); // ITS THIS ONE!! :)
+  // sndStat = CAN0.sendMsgBuf(conf[board].canId, 1, 8, data); 
 
-  /*
-  for(i = 4; i < 6; i++) {
-    Serial.println(data[i]);
-  }
-  */
-  
-  // send 1 time
-  // while(1) {}
 
 #endif // #if CAN_ENABLED
+
+
+#if PRINT_VALUES
+  if(sndStat == CAN_OK) {
+    Serial.print("Message Sent Successfully!");
+  } else {
+    Serial.print("Error Sending Message... sndStat: 0x");
+    Serial.print(sndStat, HEX);
+    INT8U ret = CAN0.getError();
+    Serial.print(" MCP_EFLG: 0x");
+    Serial.print(ret, HEX);
+  }
+
+  // debug printouts
+  Serial.print(" TEC: ");
+  Serial.print(CAN0.errorCountTX());
+
+  Serial.print(" REC: ");
+  Serial.print(CAN0.errorCountRX());
+  
+  Serial.println();
+#endif
+
+ 
+
+
 
   // delay(2000);
 
