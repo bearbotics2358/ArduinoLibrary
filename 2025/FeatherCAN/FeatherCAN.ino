@@ -73,18 +73,6 @@ SAMD21SerialNumber sn;
 #include <Adafruit_NeoPixel.h>
 
 
-/*
- * TO DO's:
- * - add NeoPixel library, strip, and initialization code
- * 
- * 
- * 
- * 
- * 
- * 
- */
-
-
 // CAN0 RESET, INT
 #define CAN0_RST 31   // MCP25625 RESET connected to Arduino pin 31
 #define CAN0_INT 30  // Set INT to Arduino pin 30
@@ -99,13 +87,11 @@ const unsigned int t_intvl = 10;  // Transmit interval in milliseconds
 
 // CAN data to send - init w/ bogus data
 byte data[] = {0xAA, 0x55, 0x01, 0x10, 0xFF, 0x12, 0x34, 0x56};
-byte tx_test_data[] = {0xff, 0x00, 0xff, 0x00, 0xff, 0x00, 0xff, 0x00};
 
-// for receiver
+// for CAN receiver
 long unsigned int rxId;
 unsigned char len = 0;
 unsigned char rxBuf[8];
-
 
 #define CAN_ID 0x0A080101
 
@@ -149,12 +135,7 @@ void CAN_setup() {
   }
 
   CAN0.setMode(MCP_NORMAL);
-
-
 }
-
-
-
 
 void setup() {
 
@@ -204,8 +185,11 @@ void setup() {
 
 
 
-  initialization();
+  initialize_config();
+
+  // determine which board based on SAMD21 serial number
   do {
+    // Read FeatherCAN SAMD21 uP serial number
     sn.read();
     sn.print();
     for(int i = 0; i < NUM_OF_CONFIG; i++) {
@@ -290,15 +274,6 @@ void setup() {
   Serial.print(" ");
   Serial.print((conf[board].canId ) & 0x00ff, HEX);
   Serial.println();
-
-
-
-
-
-
-
-
-
 
 
 

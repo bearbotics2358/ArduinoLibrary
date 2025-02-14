@@ -14,7 +14,7 @@
 
 struct configuration conf[NUM_OF_CONFIG];
 
-void initialization() {
+void initialize_config() {
 
 	/*
 

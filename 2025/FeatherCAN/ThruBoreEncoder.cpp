@@ -16,7 +16,6 @@
 
 */
 
-#include <Arduino.h>
 #include "ThruBoreEncoder.h"
 
 // angle of encoder
@@ -28,7 +27,6 @@ volatile uint16_t isrPeriod;
 volatile uint16_t isrPulsewidth;
 uint16_t period;
 uint16_t pulsewidth;
-
 
 void init_timer_capture() {
   PM->APBCMASK.reg |= PM_APBCMASK_EVSYS;     // Switch on the event system peripheral
@@ -128,8 +126,6 @@ void init_timer_capture() {
 }
 
 void TBE_loop() {
-// from loop()
-
   int pulse_len = 0;
   float pulsewidth_f = 0.0;
   float period_f = 0.0;

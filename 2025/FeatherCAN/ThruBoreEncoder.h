@@ -2,7 +2,9 @@
 
 #pragma once
 
-void init_timer_capture();
-void TC3_Handler();                                    // Interrupt Service Routine (ISR) for timer TC3
+#include <Arduino.h>
 
+void init_timer_capture();
 void TBE_loop();
+
+void TC3_Handler();  // Interrupt Service Routine (ISR) for timer TC3
