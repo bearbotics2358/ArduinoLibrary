@@ -17,13 +17,13 @@ void initialize_config() {
   conf[0].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
   conf[0].featherCAN = 7;
 
-  conf[0].color_sensor_qty = 2;
+  conf[0].color_sensor_qty = 0;
   conf[0].color_sensor_bus[0] = 1;
   conf[0].color_sensor_bus[1] = 2;
 
-  conf[0].TOF_qty = 0;
-  conf[0].TOF_bus[0] = 0;
-  conf[0].TOF_bus[1] = 0;
+  conf[0].TOF_qty = 2;
+  conf[0].TOF_bus[0] = 1;
+  conf[0].TOF_bus[1] = 2;
 
   conf[0].deviceId[0] = 1;
   conf[0].api[0] = 1;

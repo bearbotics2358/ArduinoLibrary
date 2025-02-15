@@ -29,7 +29,7 @@ struct configuration {
   int color_sensor_qty;
   int color_sensor_bus[2];
   int TOF_qty;
-  int TOF_bus[2];
+  int TOF_bus[3];
   uint32_t deviceId[2];
   uint32_t api[2];
   uint32_t canId[2];

@@ -47,7 +47,6 @@
 
 */
 
-
 // Controlling defines
 #define CAN_ENABLED 1
 #define PRINT_VALUES 1
@@ -63,8 +62,8 @@
 
 #include "SAMD21SerialNumber.h"
 #include "ThruBoreEncoder.h"
-
 #include "ColorSensorV3.h"
+#include "Adafruit_VL53L1X.h"
 
 #include "PackMessage.h"
 
@@ -75,6 +74,8 @@ SAMD21SerialNumber sn;
 #define COLOR_SENSOR_MAX 2
 rev::ColorSensorV3 cs[COLOR_SENSOR_MAX];
 
+#define TOF_SENSOR_MAX 3
+Adafruit_VL53L1X vl53[] = {Adafruit_VL53L1X(), Adafruit_VL53L1X(), Adafruit_VL53L1X()};
 
 #include <Adafruit_NeoPixel.h>
 
@@ -280,6 +281,98 @@ void Color_sensor_loop()
   }
 }
 
+void TOF_sensor_setup() {
+  int i;
+  int ret = 0;
+  
+  // Setup TOF Sensors
+  if(conf[board].TOF_qty) {
+    if(conf[board].TOF_qty <= 2) {
+      // For directly attached to I2C busses on the Feather
+      // select I2C bus that TOF Sensor is connected to
+      for(i = 0; i < conf[board].TOF_qty; i++) {
+        // works every time with the print statements
+        // but not without
+        // try a delay instead - nope, even 10 seconds didn't work
+        Serial.print("about to 'begin' unit ");
+        Serial.print(i);
+        Serial.print(" on bus ");
+        Serial.println(conf[board].TOF_bus[i]);
+        // delay(10000);
+
+        
+        if(conf[board].TOF_bus[i] == 1) {
+          ret = vl53[i].begin(0x29, &Wire);
+        } else if(conf[board].TOF_bus[i] == 2) {
+          ret = vl53[i].begin(0x29, &myWire);
+        }
+        
+        if(!ret) {
+          Serial.print(F("Error on init of VL sensor: "));
+          Serial.println(vl53[i].vl_status);
+          while (1)       delay(10);
+        }
+        Serial.println(F("VL53L1X sensor OK!"));
+      
+        Serial.print(F("Sensor ID: 0x"));
+        Serial.println(vl53[i].sensorID(), HEX);
+      
+        if (! vl53[i].startRanging()) {
+          Serial.print(F("Couldn't start ranging: "));
+          Serial.println(vl53[i].vl_status);
+          while (1)       delay(10);
+        }
+        Serial.println(F("Ranging started"));
+      
+        // Valid timing budgets: 15, 20, 33, 50, 100, 200 and 500ms!
+        vl53[i].setTimingBudget(50);
+        Serial.print(F("Timing budget (ms): "));
+        Serial.println(vl53[i].getTimingBudget());
+      }
+    } else {
+      // all TOF sensors are on I2C mux
+      // do necessary setup here
+    }
+  }
+}
+
+void TOF_sensor_loop() {
+  int16_t distance;
+  int i;
+  
+  // Read TOF Sensors
+  if(conf[board].TOF_qty) {
+    if(conf[board].TOF_qty <= 2) {
+      // For directly attached to I2C busses on the Feather
+      // select I2C bus that TOF Sensor is connected to
+      for(i = 0; i < conf[board].TOF_qty; i++) {
+        if (vl53[i].dataReady()) {
+          // new measurement for the taking!
+          distance = vl53[i].distance();
+          if (distance == -1) {
+            // something went wrong!
+            Serial.print(F("Couldn't get distance: "));
+            Serial.println(vl53[i].vl_status);
+            return;
+          }
+          Serial.print(F("Distance: "));
+          Serial.print(distance);
+          Serial.println(" mm");
+      
+          // data is read out, time for another reading!
+          vl53[i].clearInterrupt();
+        }
+      }
+    } else {
+      // all TOF sensors are on I2C mux
+      // do necessary setup here
+    }
+  }
+}
+
+
+
+
 void setup() {
 
   int i;
@@ -366,6 +459,12 @@ void setup() {
     Color_sensor_setup();
   }
 
+  Serial.println("about to check TOF");
+  delay(1000);
+  // Handle any TOF Sensors
+  if(conf[board].TOF_qty) {
+    TOF_sensor_setup();
+  }
   
   delay(2000);
 
@@ -534,6 +633,8 @@ void loop() {
     Color_sensor_loop();
   }
 
+  TOF_sensor_loop();
+  
   packAngleMsg(angle_f);
 
 #if CAN_ENABLED
