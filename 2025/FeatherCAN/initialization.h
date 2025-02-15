@@ -13,15 +13,15 @@ void initialize_config() {
   // for testing
   conf[0].type = CORAL;
   // to ignore the test unit, use the following line for serial number instead of the real one below it
-  // conf[0].sn.set((uint32_t)0, (uint32_t)0, (uint32_t)0, (uint32_t)0);
-  conf[0].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
+  conf[0].sn.set((uint32_t)0, (uint32_t)0, (uint32_t)0, (uint32_t)0);
+  // conf[0].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
   conf[0].featherCAN = 7;
 
   conf[0].color_sensor_qty = 0;
   conf[0].color_sensor_bus[0] = 1;
   conf[0].color_sensor_bus[1] = 2;
 
-  conf[0].TOF_qty = 2;
+  conf[0].TOF_qty = 0;
   conf[0].TOF_bus[0] = 1;
   conf[0].TOF_bus[1] = 2;
 
@@ -35,11 +35,12 @@ void initialize_config() {
 // CAN ID: 0 1010 0000 1000 AAAA AAAA AADD DDDD
 
   conf[1].type = CORAL;
-  conf[1].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
+  // This is the REV CAN Encoder from a couple of years ago:
+  conf[1].sn.set((uint32_t)0xFAFF85AA, (uint32_t)0x51504847, (uint32_t)0x35202020, (uint32_t)0xFF032A3B);
   conf[1].featherCAN = 7;
 
-  conf[1].color_sensor_qty = 1;
-  conf[1].color_sensor_bus[0] = 1;
+  conf[1].color_sensor_qty = 0;
+  conf[1].color_sensor_bus[0] = 2;
   conf[1].color_sensor_bus[1] = 0;
 
   conf[1].TOF_qty = 0;

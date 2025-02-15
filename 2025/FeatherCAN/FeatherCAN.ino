@@ -119,6 +119,7 @@ Adafruit_NeoPixel strip(NUMPIXELS, NEO_PIN, NEO_GRB + NEO_KHZ800);
 // angle of encoder
 extern float angle_f;
 
+uint32_t proximity[COLOR_SENSOR_MAX];
 
 
 void CAN_setup() {
@@ -146,6 +147,10 @@ void CAN_setup() {
 
 void Color_sensor_setup() {
   int i;
+
+  for(int i = 0; i < COLOR_SENSOR_MAX; i++) {
+    proximity[i] = 0;
+  }
   
   // Setup Color Sensors
   if(conf[board].color_sensor_qty) {
@@ -209,9 +214,10 @@ void Color_sensor_loop()
   
     Serial.print("MainStatus: 0x");
     Serial.print(status, HEX);
-  
+
+    proximity[i] = cs[i].GetProximity();
     Serial.print("  Proximity: ");
-    Serial.print(cs[i].GetProximity());
+    Serial.print(proximity[i]);
   
     /*
     color1 = cs.GetColor();
@@ -380,7 +386,7 @@ void setup() {
   Serial.begin(115200);
 
   // wait for serial port connection
-  while(!Serial);
+  // while(!Serial);
 
   // declare the ledPin as an OUTPUT:
   pinMode(ledPin, OUTPUT);
@@ -635,13 +641,14 @@ void loop() {
 
   TOF_sensor_loop();
   
-  packAngleMsg(angle_f);
+  // packAngleMsg(angle_f);
+  packCoralMsg(angle_f, proximity[0]);
 
 #if CAN_ENABLED
   
   // send Extended msg
-  sndStat = CAN0.sendMsgBuf(CAN_ID, 1, 8, data); // ITS THIS ONE!! :)
-  // sndStat = CAN0.sendMsgBuf(conf[board].canId, 1, 8, data); 
+  // sndStat = CAN0.sendMsgBuf(CAN_ID, 1, 8, data); // ITS THIS ONE!! :)
+  sndStat = CAN0.sendMsgBuf(conf[board].canId[0], 1, 8, data); 
 
 
 #endif // #if CAN_ENABLED
