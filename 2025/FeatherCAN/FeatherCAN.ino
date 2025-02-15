@@ -64,11 +64,17 @@
 #include "SAMD21SerialNumber.h"
 #include "ThruBoreEncoder.h"
 
+#include "ColorSensorV3.h"
+
 #include "PackMessage.h"
 
 TwoWire myWire(&sercom0, A3, A4); // 2nd I2C interdace
 
 SAMD21SerialNumber sn;
+
+#define COLOR_SENSOR_MAX 2
+rev::ColorSensorV3 cs[COLOR_SENSOR_MAX];
+
 
 #include <Adafruit_NeoPixel.h>
 
@@ -137,6 +143,143 @@ void CAN_setup() {
   CAN0.setMode(MCP_NORMAL);
 }
 
+void Color_sensor_setup() {
+  int i;
+  
+  // Setup Color Sensors
+  if(conf[board].color_sensor_qty) {
+    // select I2C bus that Color Sensor is connected to
+    for(i = 0; i < conf[board].color_sensor_qty; i++) {
+      if(conf[board].color_sensor_bus[i] == 1) {
+        cs[i].setWire(&Wire);
+      } else if(conf[board].color_sensor_bus[i] == 2) {
+        cs[i].setWire(&myWire);
+      } else {
+        Serial.print("CONFIGURATION ERROR: color_sensor_bus is not valid: ");
+        Serial.println(conf[board].color_sensor_bus[i]);
+        while(1) {}
+      }
+  
+      while(!cs[i].CheckDeviceID()) {
+        Serial.print("Device ID NOT ok for device ");
+        Serial.println(i);
+        delay(1000);
+      }
+
+      cs[i].InitializeDevice();
+
+      // Configure IR LED
+      cs[i].ConfigureProximitySensorLED(
+        rev::ColorSensorV3::LEDPulseFrequency::k100kHz, rev::ColorSensorV3::LEDCurrent::kPulse100mA, 128);
+
+      Serial.print("MainCtrl after Initialize: 0x");
+      cs[i].Read(rev::ColorSensorV3::Register::kMainCtrl, 1, data);
+      Serial.println(data[0], HEX);
+  
+      // Clear the reset flag
+      Serial.print("HasReset(): ");
+      Serial.println(cs[i].HasReset());
+    }
+  }
+
+}
+
+void Color_sensor_loop()
+{
+  uint8_t data[16];
+  uint8_t status = 0;
+  uint32_t color1 = 0;
+  uint32_t red_ch = 0;
+  uint32_t green_ch = 0;
+  uint32_t blue_ch = 0;
+  uint8_t index = 0;
+  int i;
+  
+  for(i = 0; i < conf[board].color_sensor_qty; i++) {
+    // wait for Proximity Sensor Ready (and Light Sensor Ready)
+    do {
+      cs[i].Read(rev::ColorSensorV3::Register::kMainStatus, 1, data);
+      status = data[0];
+      
+      // Serial.print("\nMainStatus: 0x");
+      // Serial.print(status, HEX);
+      delay(10);
+    } while ((status & 1) != 1); // 1 for PS, 9 for LS & PS
+  
+    Serial.print("MainStatus: 0x");
+    Serial.print(status, HEX);
+  
+    Serial.print("  Proximity: ");
+    Serial.print(cs[i].GetProximity());
+  
+    /*
+    color1 = cs.GetColor();
+    Serial.print("  Color: 0x");
+    Serial.print(color1, HEX);
+    Serial.print(" , ");
+    Serial.print((color1 >> 16) & 0x00ff);
+    Serial.print(" , ");
+    Serial.print((color1 >> 8) & 0x00ff);
+    Serial.print(" , ");
+    Serial.print(color1 & 0x00ff);
+    */
+  
+    // manually get colors
+    /*
+    // individually
+    cs.Read(rev::ColorSensorV3::Register::kDataRed, 3, data);
+    color1 = ((data[2] << 16) | (data[1]) | data[0]) & 0x0FFFFF;
+    Serial.print(" Red: ");
+    Serial.print(color1);
+  
+    cs.Read(rev::ColorSensorV3::Register::kDataGreen, 3, data);
+    color1 = ((data[2] << 16) | (data[1]) | data[0]) & 0x0FFFFF;
+    Serial.print(" Green: ");
+    Serial.print(color1);
+  
+    cs.Read(rev::ColorSensorV3::Register::kDataBlue, 3, data);
+    color1 = ((data[2] << 16) | (data[1]) | data[0]) & 0x0FFFFF;
+    Serial.print(" Blue: ");
+    Serial.print(color1);
+    */
+  
+    /*
+    // get colors all at once
+    cs.Read(rev::ColorSensorV3::Register::kDataInfrared, 12, data);
+  
+    // Red
+    index = 9;
+    red_ch = ((data[index + 2] << 16) | (data[index + 1]) | data[index]) & 0x0FFFFF;
+    Serial.print(" Red: ");
+    Serial.print(red_ch);
+  
+    // Green
+    index = 3;
+    green_ch = ((data[index + 2] << 16) | (data[index + 1]) | data[index]) & 0x0FFFFF;
+    Serial.print(" Green: ");
+    Serial.print(green_ch);
+  
+    // Blue
+    index = 6;
+    blue_ch = ((data[index + 2] << 16) | (data[index + 1]) | data[index]) & 0x0FFFFF;
+    Serial.print(" Blue: ");
+    Serial.print(blue_ch);
+    */
+    
+    
+    /*
+    Serial.print("IR: ");
+    Serial.println(cs.GetIR());
+    
+    Serial.print("MainStatus: 0x");
+    cs.Read(rev::ColorSensorV3::Register::kMainStatus, 1, data);
+    Serial.println(data[0], HEX);
+    */
+    
+    Serial.println();
+  }
+}
+
 void setup() {
 
   int i;
@@ -195,6 +338,7 @@ void setup() {
     for(int i = 0; i < NUM_OF_CONFIG; i++) {
       if(sn.check(conf[i].sn)) {
         board = i;
+        break;
       }
     }
     if(board < 0) {
@@ -216,6 +360,17 @@ void setup() {
 
   Serial.print("Board config: ");
   Serial.println(board);
+
+  // Handle any Color Sensors
+  if(conf[board].color_sensor_qty) {
+    Color_sensor_setup();
+  }
+
+  
+  delay(2000);
+
+
+
 
 #if 0
   // need to update to board types we plan to have
@@ -266,13 +421,13 @@ void setup() {
 
 	
   Serial.print("CAN ID: 0x");
-  Serial.print((conf[board].canId >> 24) & 0x00ff, HEX);
+  Serial.print((conf[board].canId[0] >> 24) & 0x00ff, HEX);
   Serial.print(" ");
-  Serial.print((conf[board].canId >> 16) & 0x00ff, HEX);
+  Serial.print((conf[board].canId[0] >> 16) & 0x00ff, HEX);
   Serial.print(" ");
-  Serial.print((conf[board].canId >> 8) & 0x00ff, HEX);
+  Serial.print((conf[board].canId[0] >> 8) & 0x00ff, HEX);
   Serial.print(" ");
-  Serial.print((conf[board].canId ) & 0x00ff, HEX);
+  Serial.print((conf[board].canId[0] ) & 0x00ff, HEX);
   Serial.println();
 
 
@@ -374,8 +529,12 @@ void loop() {
   Serial.print("Angle: ");
   Serial.println(angle_f);
 
-	packAngleMsg(angle_f);
+  // Handle any Color Sensors
+  if(conf[board].color_sensor_qty) {
+    Color_sensor_loop();
+  }
 
+  packAngleMsg(angle_f);
 
 #if CAN_ENABLED
   
