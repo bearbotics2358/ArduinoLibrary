@@ -632,14 +632,19 @@ void loop() {
   // need to fetch the values and do something with them
 
   Serial.print("Angle: ");
-  Serial.println(angle_f);
+  Serial.print(angle_f);
 
   // Handle any Color Sensors
   if(conf[board].color_sensor_qty) {
     Color_sensor_loop();
   }
 
+  Serial.print(" prox: ");
+  Serial.print(proximity[0]);
+
   TOF_sensor_loop();
+
+  Serial.println();
   
   // packAngleMsg(angle_f);
   packCoralMsg(angle_f, proximity[0]);
