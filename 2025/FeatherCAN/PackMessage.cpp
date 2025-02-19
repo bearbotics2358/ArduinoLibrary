@@ -38,6 +38,24 @@ void packCoralMsg(float angle_f, uint32_t prox)
   data[7] = 0x00;
 }
 
+// pack Algae angle data and proximity sensor data into CAN message
+void packAlgaeMsg(float angle_f, uint16_t tofDistance)
+{
+  int angle_i = (int)(angle_f * 10);
+
+  data[0] = (angle_i >> 8) & 0x00ff;
+  data[1] = angle_i & 0x00ff;
+
+  data[2] = (tofDistance >> 8) & 0x00ff;
+  data[3] = tofDistance & 0x00ff;
+
+  data[4] = 0x00;
+  data[5] = 0x00;
+
+  data[6] = 0x00;
+  data[7] = 0x00;
+}
+
 /*
 // pack message into format used by 2 steering and 1 shooter to RoboRio
 void packMsgShooter()

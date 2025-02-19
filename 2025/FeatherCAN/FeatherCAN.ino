@@ -121,6 +121,7 @@ extern float angle_f;
 
 uint32_t proximity[COLOR_SENSOR_MAX];
 
+int16_t distance[TOF_SENSOR_MAX];
 
 void CAN_setup() {
   // CAN chip RESET line
@@ -343,7 +344,6 @@ void TOF_sensor_setup() {
 }
 
 void TOF_sensor_loop() {
-  int16_t distance;
   int i;
   
   // Read TOF Sensors
@@ -354,15 +354,15 @@ void TOF_sensor_loop() {
       for(i = 0; i < conf[board].TOF_qty; i++) {
         if (vl53[i].dataReady()) {
           // new measurement for the taking!
-          distance = vl53[i].distance();
-          if (distance == -1) {
+          distance[i] = vl53[i].distance();
+          if (distance[i] == -1) {
             // something went wrong!
             Serial.print(F("Couldn't get distance: "));
             Serial.println(vl53[i].vl_status);
             return;
           }
           Serial.print(F("Distance: "));
-          Serial.print(distance);
+          Serial.print(distance[i]);
           Serial.println(" mm");
       
           // data is read out, time for another reading!
@@ -647,7 +647,13 @@ void loop() {
   Serial.println();
   
   // packAngleMsg(angle_f);
-  packCoralMsg(angle_f, proximity[0]);
+
+  // pack message for protocol from Feather CAN to RoboRio
+  if(conf[board].type == CORAL) {
+    packCoralMsg(angle_f, proximity[0]);
+  } else if(conf[board].type == ALGAE) {
+    packAlgaeMsg(angle_f, distance[0]);
+  }
 
 #if CAN_ENABLED
   

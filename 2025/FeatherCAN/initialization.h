@@ -56,8 +56,10 @@ void initialize_config() {
 
 
   conf[2].type = ALGAE;
-  conf[2].sn.set((uint32_t)0xB644C4E4, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D1A30);
-  conf[2].featherCAN = 8;
+  // the following serial number MIGHT be featherCAN #8:
+  // conf[2].sn.set((uint32_t)0xB644C4E4, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D1A30);
+  conf[2].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
+  conf[2].featherCAN = 7;
 
   conf[2].color_sensor_qty = 0;
   conf[2].color_sensor_bus[0] = 0;
