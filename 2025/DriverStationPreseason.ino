@@ -44,10 +44,10 @@ Adafruit_seesaw ss[NUM_BOARDS];
 int currentAutoSeq = 0;
 
 // constant for number of buttons or switches
-const int NumberOfButtons = 28;
+const int NUMBER_OF_BUTTONS = 28;
 
 // Array to store button states (1 for on, 0 for off)
-bool buttonStates[NumberOfButtons]; // Adjust size based on total number of buttons
+bool buttonStates[NUMBER_OF_BUTTONS]; // Adjust size based on total number of buttons
 
 void setup() {
   #if defined(ARDUINO_ARCH_MBED) && defined(ARDUINO_ARCH_RP2040)
@@ -144,17 +144,17 @@ void setup() {
   }
 
   // Initialize button states to all off
-  for (int i = 0; i < NumberOfButtons; i++) {
+  for (int i = 0; i < NUMBER_OF_BUTTONS; i++) {
     buttonStates[i] = false;
   }
 }
 
-uint8_t incr = 255;
+const uint8_t BUTTON_BRIGHTNESS = 255;
 
 // Function to update button states, ensuring only one is lit at a time
 void updateButtonStates(int buttonIndex) {
   // Turn all buttons off
-  for (int i = 0; i < NumberOfButtons; i++) {
+  for (int i = 0; i < NUMBER_OF_BUTTONS; i++) {
     buttonStates[i] = false;
   }
   // Turn the selected button on
@@ -168,25 +168,25 @@ void updateLEDs() {
     int boardBaseIndex = i * 4;
 
     if (buttonStates[boardBaseIndex + 0]) {
-      ss[i].analogWrite(PWM1, incr);
+      ss[i].analogWrite(PWM1, BUTTON_BRIGHTNESS);
     } else {
       ss[i].analogWrite(PWM1, 0);
     }
 
     if (buttonStates[boardBaseIndex + 1]) {
-      ss[i].analogWrite(PWM2, incr);
+      ss[i].analogWrite(PWM2, BUTTON_BRIGHTNESS);
     } else {
       ss[i].analogWrite(PWM2, 0);
     }
 
     if (buttonStates[boardBaseIndex + 2]) {
-      ss[i].analogWrite(PWM3, incr);
+      ss[i].analogWrite(PWM3, BUTTON_BRIGHTNESS);
     } else {
       ss[i].analogWrite(PWM3, 0);
     }
 
     if (buttonStates[boardBaseIndex + 3]) {
-      ss[i].analogWrite(PWM4, incr);
+      ss[i].analogWrite(PWM4, BUTTON_BRIGHTNESS);
     } else {
       ss[i].analogWrite(PWM4, 0);
     }
