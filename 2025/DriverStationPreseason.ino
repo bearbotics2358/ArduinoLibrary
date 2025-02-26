@@ -43,8 +43,11 @@ hid_gamepad_report_t gp;
 Adafruit_seesaw ss[NUM_BOARDS];
 int currentAutoSeq = 0;
 
+// constant for number of buttons or switches
+const int NumberOfButtons = 28;
+
 // Array to store button states (1 for on, 0 for off)
-bool buttonStates[28]; // Adjust size based on total number of buttons
+bool buttonStates[NumberOfButtons]; // Adjust size based on total number of buttons
 
 void setup() {
   #if defined(ARDUINO_ARCH_MBED) && defined(ARDUINO_ARCH_RP2040)
@@ -72,7 +75,7 @@ void setup() {
   //while (!Serial) delay(10);   // wait until Serial port is opened
 
   //Serial.println(F("Adafruit PID 5296 I2C QT 4x LED Arcade Buttons test!"));
-  
+
   if (!ss[0].begin(DEFAULT_I2C_ADDR)) {
     //Serial.println(F("seesaw not found!"));
     while(1) delay(10);
@@ -113,14 +116,14 @@ void setup() {
 
   uint16_t pid;
   uint8_t year, mon, day;
-  
+
   for(int i = 0; i<NUM_BOARDS; i++){
     ss[i].getProdDatecode(&pid, &year, &mon, &day);
     //Serial.print("seesaw found PID: ");
     //Serial.print(pid);
     //Serial.print(" datecode: ");
-    //Serial.print(2000+year); // Serial.print("/"); 
-    //Serial.print(mon); // Serial.print("/"); 
+    //Serial.print(2000+year); // Serial.print("/");
+    //Serial.print(mon); // Serial.print("/");
     //Serial.println(day);
 
     if (pid != 5296) {
@@ -141,7 +144,7 @@ void setup() {
   }
 
   // Initialize button states to all off
-  for (int i = 0; i < 28; i++) {
+  for (int i = 0; i < NumberOfButtons; i++) {
     buttonStates[i] = false;
   }
 }
@@ -151,7 +154,7 @@ uint8_t incr = 255;
 // Function to update button states, ensuring only one is lit at a time
 void updateButtonStates(int buttonIndex) {
   // Turn all buttons off
-  for (int i = 0; i < 28; i++) {
+  for (int i = 0; i < NumberOfButtons; i++) {
     buttonStates[i] = false;
   }
   // Turn the selected button on
@@ -160,27 +163,29 @@ void updateButtonStates(int buttonIndex) {
 
 // Function to update LEDs based on buttonStates array
 void updateLEDs() {
-  int buttonIndex = 0;
-  for(int i = 0; i < NUM_BOARDS; i++) {
-    if (buttonStates[buttonIndex++]) {
+  for (int i = 0; i < NUM_BOARDS; i++) {
+    // Calculate the base index for the current board
+    int boardBaseIndex = i * 4;
+
+    if (buttonStates[boardBaseIndex + 0]) {
       ss[i].analogWrite(PWM1, incr);
     } else {
       ss[i].analogWrite(PWM1, 0);
     }
 
-    if (buttonStates[buttonIndex++]) {
+    if (buttonStates[boardBaseIndex + 1]) {
       ss[i].analogWrite(PWM2, incr);
     } else {
       ss[i].analogWrite(PWM2, 0);
     }
 
-    if (buttonStates[buttonIndex++]) {
+    if (buttonStates[boardBaseIndex + 2]) {
       ss[i].analogWrite(PWM3, incr);
     } else {
       ss[i].analogWrite(PWM3, 0);
     }
 
-    if (buttonStates[buttonIndex++]) {
+    if (buttonStates[boardBaseIndex + 3]) {
       ss[i].analogWrite(PWM4, incr);
     } else {
       ss[i].analogWrite(PWM4, 0);
@@ -206,175 +211,29 @@ void loop() {
   gp.hat = 0;
   gp.buttons = 0;
 
-  int buttonIndex = 0;
+  for (int i = 0; i < NUM_BOARDS; i++) {
+    int boardBaseIndex = i * 4;
 
-  if (! ss[0].digitalRead(SWITCH1)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 0);
-  }
-  buttonIndex++;
+    if (!ss[i].digitalRead(SWITCH1)) {
+      updateButtonStates(boardBaseIndex + 0);
+      gp.buttons |= (1U << (boardBaseIndex + 0));
+    }
 
-  if (! ss[0].digitalRead(SWITCH2)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 1);
-  }
-  buttonIndex++;
+    if (!ss[i].digitalRead(SWITCH2)) {
+      updateButtonStates(boardBaseIndex + 1);
+      gp.buttons |= (1U << (boardBaseIndex + 1));
+    }
 
-  if (! ss[0].digitalRead(SWITCH3)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 2);
-  }
-  buttonIndex++;
+    if (!ss[i].digitalRead(SWITCH3)) {
+      updateButtonStates(boardBaseIndex + 2);
+      gp.buttons |= (1U << (boardBaseIndex + 2));
+    }
 
-  if (! ss[0].digitalRead(SWITCH4)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 3);
+    if (!ss[i].digitalRead(SWITCH4)) {
+      updateButtonStates(boardBaseIndex + 3);
+      gp.buttons |= (1U << (boardBaseIndex + 3));
+    }
   }
-  buttonIndex++;
-
-  if (! ss[1].digitalRead(SWITCH1)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 4);
-  }
-  buttonIndex++;
-
-  if (! ss[1].digitalRead(SWITCH2)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 5);
-  }
-  buttonIndex++;
-
-  if (! ss[1].digitalRead(SWITCH3)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 6);
-  }
-  buttonIndex++;
-
-  if (! ss[1].digitalRead(SWITCH4)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 7);
-  }
-  buttonIndex++;
-
-  if (! ss[2].digitalRead(SWITCH1)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 8);
-  }
-  buttonIndex++;
-
-  if (! ss[2].digitalRead(SWITCH2)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 9);
-  }
-  buttonIndex++;
-
-  if (! ss[2].digitalRead(SWITCH3)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 10);
-  }
-  buttonIndex++;
-
-  if (! ss[2].digitalRead(SWITCH4)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 11);
-  }
-  buttonIndex++;
-
-  if (! ss[3].digitalRead(SWITCH1)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 12);
-  }
-  buttonIndex++;
-
-  if (! ss[3].digitalRead(SWITCH2)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 13);
-  }
-  buttonIndex++;
-
-  if (! ss[3].digitalRead(SWITCH3)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 14);
-  }
-  buttonIndex++;
-
-  if (! ss[3].digitalRead(SWITCH4)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 15);
-  }
-  buttonIndex++;
-
-  if (! ss[4].digitalRead(SWITCH1)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 16);
-  }
-  buttonIndex++;
-
-  if (! ss[4].digitalRead(SWITCH2)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 17);
-  }
-  buttonIndex++;
-
-  if (! ss[4].digitalRead(SWITCH3)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 18);
-  }
-  buttonIndex++;
-
-  if (! ss[4].digitalRead(SWITCH4)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 19);
-  }
-  buttonIndex++;
-
-  if (! ss[5].digitalRead(SWITCH1)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 20);
-  }
-  buttonIndex++;
-
-  if (! ss[5].digitalRead(SWITCH2)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 21);
-  }
-  buttonIndex++;
-
-  if (! ss[5].digitalRead(SWITCH3)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 22);
-  }
-  buttonIndex++;
-
-  if (! ss[5].digitalRead(SWITCH4)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 23);
-  }
-  buttonIndex++;
-
-  if (! ss[6].digitalRead(SWITCH1)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 24);
-  }
-  buttonIndex++;
-
-  if (! ss[6].digitalRead(SWITCH2)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 25);
-  }
-  buttonIndex++;
-
-  if (! ss[6].digitalRead(SWITCH3)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 26);
-  }
-  buttonIndex++;
-
-  if (! ss[6].digitalRead(SWITCH4)) {
-    updateButtonStates(buttonIndex);
-    gp.buttons |= (1U << 27);
-  }
-  buttonIndex++;
 
   updateLEDs(); // Update LEDs based on the buttonStates array
   usb_hid.sendReport(0, &gp, sizeof(gp)); //delay(10);
