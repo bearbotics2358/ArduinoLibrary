@@ -1,5 +1,3 @@
-
-
 // NEOPIXEL BEST PRACTICES for most reliable operation:
 // - Add 1000 uF CAPACITOR between NeoPixel strip's + and - connections.
 // - MINIMIZE WIRING LENGTH between microcontroller board and first pixel.
@@ -10,7 +8,6 @@
 //   a LOGIC-LEVEL CONVERTER on the data line is STRONGLY RECOMMENDED.
 // (Skipping these may work OK on your workbench but can fail in the field)
 
-
 #include <Adafruit_NeoPixel.h>
 #ifdef __AVR__
 #include <avr/power.h>  // Required for 16 MHz Adafruit Trinket
@@ -20,290 +17,135 @@
 #include <string.h>
 #include "protocol2025.h"
 
-
 #define DEBUG 1
-// Which pin on the Arduino is connected to the NeoPixels?
-// On a Trinket or Gemma we suggest changing this to 1:
 #define LED_PIN 6
-
-
-// How many NeoPixels are attached to the Arduino?
-#define LED_COUNT 100
-
+#define LED_COUNT 150
 #define MAXLEN 900
 
 char rx_buff[MAXLEN];
 int rx_index = 0;
 
-
-// Declare our NeoPixel strip object:
-
 // Declare our NeoPixel strip object:
 Adafruit_NeoPixel strip(LED_COUNT, PIN_EXTERNAL_NEOPIXELS, NEO_GRB + NEO_KHZ800);
-// Argument 1 = Number of pixels in NeoPixel strip
-// Argument 2 = Arduino pin number (most are valid)
-// Argument 3 = Pixel type flags, add together as needed:
-//   NEO_KHZ800  800 KHz bitstream (most NeoPixel products w/WS2812 LEDs)
-//   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
-//   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
-//   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-//   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
+
 uint32_t colWhite = strip.Color(25, 25, 25);
 uint32_t brightWhite = strip.Color(255, 255, 255);
-uint32_t algaeAqua = strip.Color(139,247,204);
+uint32_t algaeAqua = strip.Color(139, 247, 204);
 uint32_t greenReady = strip.Color(25, 155, 25);
-uint32_t superPink = strip.Color(255,20,147);//(255,37,169) previously
+uint32_t superPink = strip.Color(255, 20, 147); //(255,37,169) previously
 uint32_t purpleGem = strip.Color(72, 32, 84);
-uint32_t matthewRed = strip.Color(123, 10, 3);//(52,0,0) previously
+uint32_t matthewRed = strip.Color(123, 10, 3); //(52,0,0) previously
 uint32_t piss = strip.Color(190, 161, 4);
 uint32_t bearCyan = strip.Color(25, 35, 215);
 
 bool newCommand = false;
 
-// return true if a command has been received and is stored in rx_buff
 int GetCommand() {
-  int ret = 0;
-  int i;
-
-  // get command if there is one
-  // every time called, and every time through loop, get command chars
-  // if available
-  // when '\r' (or '\n') found, process command
-  // throw away remaining '\r' or '\n'
-  while (!newCommand && (Serial.available() > 0)) {
-    rx_buff[rx_index] = Serial.read();
-    if ((rx_buff[rx_index] == '\r')
-        || (rx_buff[rx_index] == '\n')) {
-      // process command
-      if (rx_index == 0) {
-        // no command
-        continue;
+  if (Serial.available() > 0) {
+    char c = Serial.read();
+    if (c == '\n' || c == '\r') {
+      if (rx_index > 0) {
+        rx_buff[rx_index] = '\0';
+        Serial.print("Received: ");
+        Serial.println(rx_buff);
+        rx_index = 0;
+        newCommand = true;
+        return 1;
       }
-      // replace with a string terminator to enable printing
-      rx_buff[rx_index] = 0;
-#ifdef DEBUG
-      // Serial.print("9,1,cmd = ");
-      // Serial.println(rx_buff);
-#endif
-
-      // print buffer back in HEX for debugging 
-      Serial.print("cmd: ");
-      for(i = 0; i <= rx_index; i++) {
-        Serial.print(rx_buff[i], HEX);
-        Serial.print(" ");
-      }
-      Serial.println();
-      
-      // process command
-      ret = 1;
-      newCommand = true;
-
-      // reset for next command
-      rx_index = 0;
+    } else if (rx_index < MAXLEN - 1 && isDigit(c)) { // Only accept digits
+      rx_buff[rx_index++] = c;
     } else {
-      // have not received end of command yet
-      if (rx_index < MAXLEN - 1) {
-        rx_index++;
-      }
+        rx_index = 0; // Reset index if non-digit received
     }
   }
-  return ret;
+  return 0;
 }
 
 void ProcessCommand() {
-  int i;
-  
-  newCommand = false;
-  
-      // print buffer back in HEX for debugging 
-      Serial.print("cmd: ");
-      for(i = 0; i <= rx_index; i++) {
-        Serial.print(rx_buff[i], HEX);
-        Serial.print(" ");
-      }
-      
-  // get msg_type and data_len
-  int msg_type = atoi(strtok(rx_buff, ","));
-#ifdef DEBUG
-  Serial.print("msg_type: ");
-#endif
-  Serial.println(msg_type);
-  int data_len = atoi(strtok(NULL, ","));
-  int data0 = 0;
+  if (newCommand) {
+    newCommand = false;
+    Serial.print("Processing command: ");
+    Serial.println(rx_buff);
 
-  switch (msg_type) {
+    int msg_type = atoi(rx_buff);
 
-    case RIO_msgs_enum::WHITE:
-#ifdef DEBUG
-      Serial.print("9,0,WHITE command received");
-#endif
-      strip.clear();
-      strip.fill(colWhite);
-      strip.show();
+    Serial.print("msg_type: ");
+    Serial.println(msg_type);
 
-#ifdef DEBUG
-      Serial.println();
-#endif
-      break;
+    strip.clear();  // Clear previous animation
 
+    switch (msg_type) {
+      case RIO_msgs_enum::MSG_IDLE:
+        Serial.println("9,1,IDLE command received");
+        alternatingWipe(brightWhite, bearCyan, 1);
+        break;
 
-    case RIO_msgs_enum::MSG_IDLE:
-#ifdef DEBUG
-      Serial.println("9,1,IDLE command received");
-#endif
-      alternatingWipe(brightWhite, bearCyan, 1);
-      strip.show();
+      case RIO_msgs_enum::NO_COMMS:
+        Serial.println("9,2,NO_COMMS command received");
+        rainbow(65); //loss of comms
+        break;
 
-#ifdef DEBUG
-      Serial.println();
-#endif
-      break;
+      case RIO_msgs_enum::ELEVATOR_L1:
+        Serial.println("9,3,ELEVATOR_L1 command received");
+        runningLights(matthewRed, 55);
+        break;
 
+      case RIO_msgs_enum::ALGAE_HELD:
+        Serial.println("9,4,ALGAE_HELD command received");
+        theaterChase(algaeAqua, 45);
+        break;
 
-    case RIO_msgs_enum::NO_COMMS:
-#ifdef DEBUG
-      Serial.println("9,1,NO_COMMS command received");
-#endif
+      case RIO_msgs_enum::ELEVATOR_L2:
+        Serial.println("9,5,ELEVATOR_L2 command received");
+        radarSweep(purpleGem, 40, 3);
+        break;
 
-      // temp to have another color w/o animations
-      // strip.clear();
-      // strip.fill(greenReady);
-      // strip.show();
-      // break;
-      
-      
-      // Fill along the length of the strip in various colors...
-      rainbow(65);  //loss of comms
+      case RIO_msgs_enum::ELEVATOR_L3:
+        Serial.println("9,6,ELEVATOR_L3 command received");
+        Strobe(superPink, 2, 50, 50);
+        break;
 
+      case RIO_msgs_enum::IDK:
+        Serial.println("9,7,IDK command received");
+        snakeAnimation(piss, 31, 12);
+        break;
 
-#ifdef DEBUG
-      Serial.println();
-#endif
-      break;
+      case RIO_msgs_enum::TEST:
+        Serial.println("9,8,Test command received");
+        alternatingWipe(matthewRed, piss, 12);
+        break;
 
+      default:
+        Serial.println("9,0,unknown command");
+        strip.fill(strip.Color(255, 0, 0));  // Set red for unknown command
+        break;
+    }
 
-    case RIO_msgs_enum::ELEVATOR_L1:
-#ifdef DEBUG
-      Serial.print("9,3,ELEVATOR_L1 command received");
-#endif
-      // Fill along the length of the strip in various colors...
-         runningLights(matthewRed,55); 
-#ifdef DEBUG
-      Serial.println();
-#endif
-      break;
-
-
-
-    case RIO_msgs_enum::ALGAE_HELD:
-#ifdef DEBUG
-      Serial.print("9,4,ALGAE_HELD command received");
-#endif
-      // Fill along the length of the strip in various colors...
-      theaterChase(algaeAqua, 45);
-
-#ifdef DEBUG
-      Serial.println();
-#endif
-      break;
-
-
-
-    case RIO_msgs_enum::ELEVATOR_L2:
-#ifdef DEBUG
-      Serial.print("9,5,ELEVATOR_L2 command received");
-#endif
-      // Fill along the length of the strip in various colors...
-      radarSweep(purpleGem, 40, 3);
-
-#ifdef DEBUG
-      Serial.println();
-#endif
-      break;
-
-
-
-    case RIO_msgs_enum::ELEVATOR_L3:
-#ifdef DEBUG
-      Serial.print("9,6,ELEVATOR_L3 command received");
-#endif
-      // Fill along the length of the strip in various colors...
-  Strobe(superPink, 2, 50, 50);             
-
-#ifdef DEBUG
-      Serial.println();
-#endif
-      break;
-
-
-
-    case RIO_msgs_enum::IDK:
-#ifdef DEBUG
-      Serial.print("9,7,IDK command received");
-#endif
-      // Fill along the length of the strip in various colors...
-     //fireworks(superPink, 40, 50, 3,20); draft one
-     snakeAnimation(piss, 31, 12);
-
-#ifdef DEBUG
-      Serial.println();
-#endif
-      break;
-
-
-
-    case RIO_msgs_enum::GOTOMCDONALDS:
-#ifdef DEBUG
-      Serial.print("9,8,GOTOMCDONALDS command received");
-#endif
-      // Fill along the length of the strip in various colors...
-     //fireworks(superPink, 40, 50, 3,20); draft one
-     alternatingWipe(matthewRed, piss, 12);
-
-#ifdef DEBUG
-      Serial.println();
-#endif
-      break;
-
-
-
-    default:
-#ifdef DEBUG
-      Serial.println("9,0,unknown command");
-#endif
-      break;
+    strip.show();  // Ensure changes are displayed after each command
+    Serial.println("LED update complete");
   }
 }
 
-
 void setup() {
-  // core1 setup
   Serial.begin(115200);
+  while (!Serial) {
+    ; // Wait for serial port to connect. Needed for native USB port only
+  }
+  Serial.println("Serial communication initialized");
+  delay(100);
 
   pinMode(PIN_EXTERNAL_POWER, OUTPUT);
   digitalWrite(PIN_EXTERNAL_POWER, HIGH);
 
   strip.begin();
-  strip.fill(colWhite);
   strip.setBrightness(100);
   strip.show();
-
   pinMode(PIN_EXTERNAL_BUTTON, INPUT_PULLUP);
 }
 
-// loop() function -- runs repeatedly as long as board is on ---------------
-
 void loop() {
-  // Fill along the length of the strip in various colors...
-  //rainbow(11); loss of comms
-
-  // Get and process command
-  if (newCommand || GetCommand()) {
-    ProcessCommand();
-  }
-
-
-
+  GetCommand();
+  ProcessCommand();
   delay(5);  // Small delay between polling
 }
 
@@ -578,4 +420,3 @@ void radarSweep(uint32_t color, int length, int speed) {
     delay(speed);
   }
 }
-
