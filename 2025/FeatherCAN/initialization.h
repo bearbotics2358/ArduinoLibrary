@@ -11,31 +11,36 @@ struct configuration conf[NUM_OF_CONFIG];
 void initialize_config() {
 
   // for testing
-  conf[0].type = CORAL;
+  conf[0].type = ALGAE;
   // to ignore the test unit, use the following line for serial number instead of the real one below it
-  conf[0].sn.set((uint32_t)0, (uint32_t)0, (uint32_t)0, (uint32_t)0);
+  // conf[0].sn.set((uint32_t)0, (uint32_t)0, (uint32_t)0, (uint32_t)0);
   // conf[0].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
-  conf[0].featherCAN = 7;
 
-  conf[0].color_sensor_qty = 1;
-  conf[0].color_sensor_bus[0] = 2;
-  conf[0].color_sensor_bus[1] = 2;
+  // FeatherCAN #9
+  conf[0].sn.set((uint32_t)0x920E71B5, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D2F2F);
+  conf[0].featherCAN = 9;
 
-  conf[0].TOF_qty = 0;
+  conf[0].color_sensor_qty = 0;
+  conf[0].color_sensor_bus[0] = 0;
+  conf[0].color_sensor_bus[1] = 0;
+
+  conf[0].TOF_qty = 1;
   conf[0].TOF_bus[0] = 1;
-  conf[0].TOF_bus[1] = 2;
+  conf[0].TOF_bus[1] = 0;
 
-  conf[0].deviceId[0] = 1;
-  conf[0].api[0] = 1;
-  conf[0].canId[0] = 0x0a080041;
+  conf[0].deviceId[0] = 2;
+  conf[0].api[0] = 2;
+  conf[0].canId[0] = 0x0a080082;
   conf[0].deviceId[1] = 0;
   conf[0].api[1] = 0;
   conf[0].canId[1] = 0;
+
 
 // CAN ID: 0 1010 0000 1000 AAAA AAAA AADD DDDD
 
   conf[1].type = CORAL;
   // This is the REV CAN Encoder from a couple of years ago:
+  // FeatherCAN 11 (I think)
   conf[1].sn.set((uint32_t)0xFAFF85AA, (uint32_t)0x51504847, (uint32_t)0x35202020, (uint32_t)0xFF032A3B);
   conf[1].featherCAN = 11;
 
@@ -58,6 +63,7 @@ void initialize_config() {
   conf[2].type = ALGAE;
   // the following serial number MIGHT be featherCAN #8:
   // conf[2].sn.set((uint32_t)0xB644C4E4, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D1A30);
+  // FeatherCAN #7 (I think)
   conf[2].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
   conf[2].featherCAN = 7;
 
@@ -119,6 +125,25 @@ void initialize_config() {
 
   
 /*
+ 
+Board Serial Numbers:
+
+  // FeatherCAN #7 (I think)
+  conf[2].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
+
+  // FeatherCAN #8 (maybe)
+  // conf[2].sn.set((uint32_t)0xB644C4E4, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D1A30);
+  
+  // FeatherCAN #9
+  // conf[0].sn.set((uint32_t)0x920E71B5, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D2F2F);
+
+  // FeatherCAN #10
+  conf[0].sn.set((uint32_t)0x51E05DD4, (uint32_t)0x51503235, (uint32_t)0x314A2020, (uint32_t)0xFF06293D);
+ 
+  // FeatherCAN 11 (I think)
+  conf[1].sn.set((uint32_t)0xFAFF85AA, (uint32_t)0x51504847, (uint32_t)0x35202020, (uint32_t)0xFF032A3B);
+ 
+ 
   // from previous year, other serial numbers:
 
   conf[4].featherCAN = 7;

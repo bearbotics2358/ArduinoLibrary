@@ -74,8 +74,17 @@ SAMD21SerialNumber sn;
 #define COLOR_SENSOR_MAX 2
 rev::ColorSensorV3 cs[COLOR_SENSOR_MAX];
 
+// Bug in VL53L1X driver, cannot not set pins - it should be ok, but it locks up in init if not set
+// we don't actually use these functions, and they are not normally wired up anyway
+#define IRQ_PIN 1
+#define XSHUT_PIN 2
+
 #define TOF_SENSOR_MAX 3
-Adafruit_VL53L1X vl53[] = {Adafruit_VL53L1X(), Adafruit_VL53L1X(), Adafruit_VL53L1X()};
+Adafruit_VL53L1X vl53[] = {
+  Adafruit_VL53L1X(XSHUT_PIN, IRQ_PIN), 
+  Adafruit_VL53L1X(XSHUT_PIN, IRQ_PIN), 
+  Adafruit_VL53L1X(XSHUT_PIN, IRQ_PIN)
+};
 
 #include <Adafruit_NeoPixel.h>
 
@@ -386,12 +395,14 @@ void setup() {
   Serial.begin(115200);
 
   // wait for serial port connection
-  // while(!Serial);
+  while(!Serial);
 
   // declare the ledPin as an OUTPUT:
   pinMode(ledPin, OUTPUT);
 
-  delay(1000);
+  delay(5000);
+
+  Serial.println("in setup ...");
 
   digitalWrite(ledPin, 1);
   
@@ -633,16 +644,20 @@ void loop() {
 
   Serial.print("Angle: ");
   Serial.print(angle_f);
+  Serial.print(" ");
 
   // Handle any Color Sensors
   if(conf[board].color_sensor_qty) {
     Color_sensor_loop();
+
+    // for now, print the first one
+    Serial.print(" prox: ");
+    Serial.print(proximity[0]);
   }
 
-  Serial.print(" prox: ");
-  Serial.print(proximity[0]);
-
+  // Handle any Time of Flight Sensors
   TOF_sensor_loop();
+  // distance values print in above function
 
   Serial.println();
   
