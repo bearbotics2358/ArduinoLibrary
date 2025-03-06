@@ -395,7 +395,7 @@ void setup() {
   Serial.begin(115200);
 
   // wait for serial port connection
-  while(!Serial);
+  // while(!Serial);
 
   // declare the ledPin as an OUTPUT:
   pinMode(ledPin, OUTPUT);

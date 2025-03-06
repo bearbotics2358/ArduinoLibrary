@@ -13,11 +13,11 @@ void initialize_config() {
   // for testing
   conf[0].type = ALGAE;
   // to ignore the test unit, use the following line for serial number instead of the real one below it
-  // conf[0].sn.set((uint32_t)0, (uint32_t)0, (uint32_t)0, (uint32_t)0);
+  conf[0].sn.set((uint32_t)0, (uint32_t)0, (uint32_t)0, (uint32_t)0);
   // conf[0].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
 
   // FeatherCAN #9
-  conf[0].sn.set((uint32_t)0x920E71B5, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D2F2F);
+  // conf[0].sn.set((uint32_t)0x920E71B5, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D2F2F);
   conf[0].featherCAN = 9;
 
   conf[0].color_sensor_qty = 0;
@@ -63,7 +63,7 @@ void initialize_config() {
   conf[2].type = ALGAE;
   // the following serial number MIGHT be featherCAN #8:
   // conf[2].sn.set((uint32_t)0xB644C4E4, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D1A30);
-  // FeatherCAN #7 (I think)
+  // FeatherCAN #7
   conf[2].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
   conf[2].featherCAN = 7;
 
@@ -128,7 +128,7 @@ void initialize_config() {
  
 Board Serial Numbers:
 
-  // FeatherCAN #7 (I think)
+  // FeatherCAN #7
   conf[2].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
 
   // FeatherCAN #8 (maybe)
@@ -146,7 +146,6 @@ Board Serial Numbers:
  
   // from previous year, other serial numbers:
 
-  conf[4].featherCAN = 7;
   conf[4].sN.sN[0] = 0x9511C974;
   conf[4].sN.sN[1] = 0x51503235;
   conf[4].sN.sN[2] = 0x314A2020;
