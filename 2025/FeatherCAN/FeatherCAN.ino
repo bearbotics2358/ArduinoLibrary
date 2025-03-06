@@ -74,8 +74,17 @@ SAMD21SerialNumber sn;
 #define COLOR_SENSOR_MAX 2
 rev::ColorSensorV3 cs[COLOR_SENSOR_MAX];
 
+// Bug in VL53L1X driver, cannot not set pins - it should be ok, but it locks up in init if not set
+// we don't actually use these functions, and they are not normally wired up anyway
+#define IRQ_PIN 1
+#define XSHUT_PIN 2
+
 #define TOF_SENSOR_MAX 3
-Adafruit_VL53L1X vl53[] = {Adafruit_VL53L1X(), Adafruit_VL53L1X(), Adafruit_VL53L1X()};
+Adafruit_VL53L1X vl53[] = {
+  Adafruit_VL53L1X(XSHUT_PIN, IRQ_PIN), 
+  Adafruit_VL53L1X(XSHUT_PIN, IRQ_PIN), 
+  Adafruit_VL53L1X(XSHUT_PIN, IRQ_PIN)
+};
 
 #include <Adafruit_NeoPixel.h>
 
@@ -121,6 +130,7 @@ extern float angle_f;
 
 uint32_t proximity[COLOR_SENSOR_MAX];
 
+int16_t distance[TOF_SENSOR_MAX];
 
 void CAN_setup() {
   // CAN chip RESET line
@@ -343,7 +353,6 @@ void TOF_sensor_setup() {
 }
 
 void TOF_sensor_loop() {
-  int16_t distance;
   int i;
   
   // Read TOF Sensors
@@ -354,15 +363,15 @@ void TOF_sensor_loop() {
       for(i = 0; i < conf[board].TOF_qty; i++) {
         if (vl53[i].dataReady()) {
           // new measurement for the taking!
-          distance = vl53[i].distance();
-          if (distance == -1) {
+          distance[i] = vl53[i].distance();
+          if (distance[i] == -1) {
             // something went wrong!
             Serial.print(F("Couldn't get distance: "));
             Serial.println(vl53[i].vl_status);
             return;
           }
           Serial.print(F("Distance: "));
-          Serial.print(distance);
+          Serial.print(distance[i]);
           Serial.println(" mm");
       
           // data is read out, time for another reading!
@@ -391,7 +400,9 @@ void setup() {
   // declare the ledPin as an OUTPUT:
   pinMode(ledPin, OUTPUT);
 
-  delay(1000);
+  delay(5000);
+
+  Serial.println("in setup ...");
 
   digitalWrite(ledPin, 1);
   
@@ -633,21 +644,31 @@ void loop() {
 
   Serial.print("Angle: ");
   Serial.print(angle_f);
+  Serial.print(" ");
 
   // Handle any Color Sensors
   if(conf[board].color_sensor_qty) {
     Color_sensor_loop();
+
+    // for now, print the first one
+    Serial.print(" prox: ");
+    Serial.print(proximity[0]);
   }
 
-  Serial.print(" prox: ");
-  Serial.print(proximity[0]);
-
+  // Handle any Time of Flight Sensors
   TOF_sensor_loop();
+  // distance values print in above function
 
   Serial.println();
   
   // packAngleMsg(angle_f);
-  packCoralMsg(angle_f, proximity[0]);
+
+  // pack message for protocol from Feather CAN to RoboRio
+  if(conf[board].type == CORAL) {
+    packCoralMsg(angle_f, proximity[0]);
+  } else if(conf[board].type == ALGAE) {
+    packAlgaeMsg(angle_f, distance[0]);
+  }
 
 #if CAN_ENABLED
   

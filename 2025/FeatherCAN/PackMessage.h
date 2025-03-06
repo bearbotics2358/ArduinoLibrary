@@ -6,11 +6,15 @@
 
 extern byte data[8];
 
-// pack angle data into CAN message
-void packAngleMsg(float angle_f);
-
 // pack Coral angle data and proximity sensor data into CAN message
 void packCoralMsg(float angle_f, uint32_t prox);
+
+// pack Algae angle data and proximity sensor data into CAN message
+void packAlgaeMsg(float angle_f, uint16_t tofDistance);
+
+
+// pack angle data into CAN message
+void packAngleMsg(float angle_f);
 
 // pack message into format used by 2 steering and 1 shooter to RoboRio
 void packMsgShooter();
