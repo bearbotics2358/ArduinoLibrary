@@ -12,6 +12,9 @@ void packCoralMsg(float angle_f, uint32_t prox);
 // pack Algae angle data and proximity sensor data into CAN message
 void packAlgaeMsg(float angle_f, uint16_t tofDistance);
 
+// pack Climber angle data and proximity sensor data into CAN message
+void packClimberMsg(float angle_f, uint32_t prox[]);
+
 
 // pack angle data into CAN message
 void packAngleMsg(float angle_f);

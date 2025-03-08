@@ -668,6 +668,8 @@ void loop() {
     packCoralMsg(angle_f, proximity[0]);
   } else if(conf[board].type == ALGAE) {
     packAlgaeMsg(angle_f, distance[0]);
+  } else if(conf[board].type == CLIMBER) {
+    packClimberMsg(angle_f, proximity);
   }
 
 #if CAN_ENABLED

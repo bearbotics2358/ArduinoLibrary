@@ -56,6 +56,24 @@ void packAlgaeMsg(float angle_f, uint16_t tofDistance)
   data[7] = 0x00;
 }
 
+// pack Climber angle data and proximity sensor data into CAN message
+void packClimberMsg(float angle_f, uint32_t prox[])
+{
+  int angle_i = (int)(angle_f * 10);
+
+  data[0] = (angle_i >> 8) & 0x00ff;
+  data[1] = angle_i & 0x00ff;
+
+  data[2] = (prox[0] >> 8) & 0x00ff;
+  data[3] = prox[0] & 0x00ff;
+  
+  data[4] = (prox[1] >> 8) & 0x00ff;
+  data[5] = prox[1] & 0x00ff;
+  
+  data[6] = 0x00;
+  data[7] = 0x00;
+}
+
 /*
 // pack message into format used by 2 steering and 1 shooter to RoboRio
 void packMsgShooter()

@@ -84,10 +84,13 @@ void initialize_config() {
 
 
   conf[3].type = CLIMBER;
-  conf[3].sn.set((uint32_t)0x920E71B5, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D2F2F);
-  conf[3].featherCAN = 9;
+  // FeatherCAN #8
+  conf[3].sn.set((uint32_t)0xB644C4E4, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D1A30);
+  conf[3].featherCAN = 8;
 
-  conf[3].color_sensor_qty = 2;
+  // temporary setup - no color sensors connected
+  // conf[3].color_sensor_qty = 2;
+  conf[3].color_sensor_qty = 0;
   conf[3].color_sensor_bus[0] = 1;
   conf[3].color_sensor_bus[1] = 2;
 
@@ -131,7 +134,7 @@ Board Serial Numbers:
   // FeatherCAN #7
   conf[2].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
 
-  // FeatherCAN #8 (maybe)
+  // FeatherCAN #8
   // conf[2].sn.set((uint32_t)0xB644C4E4, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D1A30);
   
   // FeatherCAN #9
