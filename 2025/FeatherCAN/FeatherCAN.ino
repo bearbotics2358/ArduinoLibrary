@@ -666,6 +666,14 @@ void loop() {
   // pack message for protocol from Feather CAN to RoboRio
   if(conf[board].type == CORAL) {
     packCoralMsg(angle_f, proximity[0]);
+    if(proximity[0] > 1500) {
+      // detect
+      strip.setPixelColor(1, 0x001000);      
+    } else {
+      // nothing there
+      strip.setPixelColor(1, 0x100000);      
+    }
+      strip.show();                     // Refresh strip
   } else if(conf[board].type == ALGAE) {
     packAlgaeMsg(angle_f, distance[0]);
   } else if(conf[board].type == CLIMBER) {

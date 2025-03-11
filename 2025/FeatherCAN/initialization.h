@@ -11,20 +11,20 @@ struct configuration conf[NUM_OF_CONFIG];
 void initialize_config() {
 
   // for testing
-  conf[0].type = ALGAE;
+  conf[0].type = CORAL;
   // to ignore the test unit, use the following line for serial number instead of the real one below it
-  conf[0].sn.set((uint32_t)0, (uint32_t)0, (uint32_t)0, (uint32_t)0);
+  // conf[0].sn.set((uint32_t)0, (uint32_t)0, (uint32_t)0, (uint32_t)0);
   // conf[0].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
 
   // FeatherCAN #9
-  // conf[0].sn.set((uint32_t)0x920E71B5, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D2F2F);
+  conf[0].sn.set((uint32_t)0x920E71B5, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D2F2F);
   conf[0].featherCAN = 9;
 
-  conf[0].color_sensor_qty = 0;
-  conf[0].color_sensor_bus[0] = 0;
+  conf[0].color_sensor_qty = 1;
+  conf[0].color_sensor_bus[0] = 1;
   conf[0].color_sensor_bus[1] = 0;
 
-  conf[0].TOF_qty = 1;
+  conf[0].TOF_qty = 0;
   conf[0].TOF_bus[0] = 1;
   conf[0].TOF_bus[1] = 0;
 
