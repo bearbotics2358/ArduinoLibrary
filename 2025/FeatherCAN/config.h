@@ -28,6 +28,8 @@ struct configuration {
   int featherCAN;
   int color_sensor_qty;
   int color_sensor_bus[2];
+  int using_mux;
+  int mux_bus;
   int TOF_qty;
   int TOF_bus[3];
   uint32_t deviceId[2];

@@ -132,6 +132,16 @@ uint32_t proximity[COLOR_SENSOR_MAX];
 
 int16_t distance[TOF_SENSOR_MAX];
 
+#define PCAADDR 0x70
+
+void pcaselect(uint8_t i) {
+  if (i > 7) return;
+ 
+  Wire.beginTransmission(PCAADDR);
+  Wire.write(1 << i);
+  Wire.endTransmission();  
+}
+
 void CAN_setup() {
   // CAN chip RESET line
   pinMode(CAN0_RST, OUTPUT);
@@ -303,7 +313,7 @@ void TOF_sensor_setup() {
   
   // Setup TOF Sensors
   if(conf[board].TOF_qty) {
-    if(conf[board].TOF_qty <= 2) {
+    if(conf[board].using_mux == 0) {
       // For directly attached to I2C busses on the Feather
       // select I2C bus that TOF Sensor is connected to
       for(i = 0; i < conf[board].TOF_qty; i++) {
@@ -348,6 +358,49 @@ void TOF_sensor_setup() {
     } else {
       // all TOF sensors are on I2C mux
       // do necessary setup here
+      
+      for(i = 0; i < conf[board].TOF_qty; i++) {
+        // choose appropriate port on the I2C multiplexer
+        pcaselect(conf[board].TOF_bus[i]);
+
+        // works every time with the print statements
+        // but not without
+        // try a delay instead - nope, even 10 seconds didn't work
+        Serial.print("about to 'begin' unit ");
+        Serial.print(i);
+        Serial.print(" on bus ");
+        Serial.println(conf[board].TOF_bus[i]);
+        // delay(10000);
+
+        
+        if(conf[board].mux_bus == 1) {
+          ret = vl53[i].begin(0x29, &Wire);
+        } else if(conf[board].mux_bus == 2) {
+          ret = vl53[i].begin(0x29, &myWire);
+        }
+        
+        if(!ret) {
+          Serial.print(F("Error on init of VL sensor: "));
+          Serial.println(vl53[i].vl_status);
+          while (1)       delay(10);
+        }
+        Serial.println(F("VL53L1X sensor OK!"));
+      
+        Serial.print(F("Sensor ID: 0x"));
+        Serial.println(vl53[i].sensorID(), HEX);
+      
+        if (! vl53[i].startRanging()) {
+          Serial.print(F("Couldn't start ranging: "));
+          Serial.println(vl53[i].vl_status);
+          while (1)       delay(10);
+        }
+        Serial.println(F("Ranging started"));
+      
+        // Valid timing budgets: 15, 20, 33, 50, 100, 200 and 500ms!
+        vl53[i].setTimingBudget(50);
+        Serial.print(F("Timing budget (ms): "));
+        Serial.println(vl53[i].getTimingBudget());
+      }
     }
   }
 }
@@ -357,7 +410,7 @@ void TOF_sensor_loop() {
   
   // Read TOF Sensors
   if(conf[board].TOF_qty) {
-    if(conf[board].TOF_qty <= 2) {
+    if(conf[board].using_mux == 0) {
       // For directly attached to I2C busses on the Feather
       // select I2C bus that TOF Sensor is connected to
       for(i = 0; i < conf[board].TOF_qty; i++) {
@@ -381,6 +434,27 @@ void TOF_sensor_loop() {
     } else {
       // all TOF sensors are on I2C mux
       // do necessary setup here
+      for(i = 0; i < conf[board].TOF_qty; i++) {
+        // choose appropriate port on the I2C multiplexer
+        pcaselect(conf[board].TOF_bus[i]);
+
+        if (vl53[i].dataReady()) {
+          // new measurement for the taking!
+          distance[i] = vl53[i].distance();
+          if (distance[i] == -1) {
+            // something went wrong!
+            Serial.print(F("Couldn't get distance: "));
+            Serial.println(vl53[i].vl_status);
+            return;
+          }
+          Serial.print(F("Distance: "));
+          Serial.print(distance[i]);
+          Serial.println(" mm");
+      
+          // data is read out, time for another reading!
+          vl53[i].clearInterrupt();
+        }
+      }
     }
   }
 }
@@ -664,7 +738,8 @@ void loop() {
   // packAngleMsg(angle_f);
 
   // pack message for protocol from Feather CAN to RoboRio
-  if(conf[board].type == CORAL) {
+  switch(conf[board].type) {
+  case CORAL: 
     packCoralMsg(angle_f, proximity[0]);
     if(proximity[0] > 1500) {
       // detect
@@ -673,12 +748,47 @@ void loop() {
       // nothing there
       strip.setPixelColor(1, 0x100000);      
     }
-      strip.show();                     // Refresh strip
-  } else if(conf[board].type == ALGAE) {
+    break;
+      
+  case ALGAE:
     packAlgaeMsg(angle_f, distance[0]);
-  } else if(conf[board].type == CLIMBER) {
+    if(proximity[0] > 1500) {
+      // detect
+      strip.setPixelColor(1, 0x001000);      
+    } else {
+      // nothing there
+      strip.setPixelColor(1, 0x100000);      
+    }
+    break;
+      
+  case CLIMBER:
     packClimberMsg(angle_f, proximity);
+    if(proximity[0] > 1500) {
+      // detect
+      strip.setPixelColor(1, 0x001000);      
+    } else {
+      // nothing there
+      strip.setPixelColor(1, 0x100000);      
+    }
+
+    if(proximity[1] > 1500) {
+      // detect
+      strip.setPixelColor(0, 0x001000);      
+    } else {
+      // nothing there
+      strip.setPixelColor(0, 0x100000);      
+    }
+    break;
+    
+  case BELLYPAN:
+    packBellypanTOFMsg(distance);
+    break;
+
+  default:
+    break;
+    
   }
+  strip.show();                     // Refresh strip
 
 #if CAN_ENABLED
   
