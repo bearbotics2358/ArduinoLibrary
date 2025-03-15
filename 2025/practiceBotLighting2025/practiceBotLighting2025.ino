@@ -19,8 +19,8 @@
 
 #define DEBUG 1
 #define LED_PIN 6
-#define LED_COUNT 150
-#define MAXLEN 900
+#define LED_COUNT 75
+#define MAXLEN 450
 
 char rx_buff[MAXLEN];
 int rx_index = 0;
@@ -37,6 +37,7 @@ uint32_t purpleGem = strip.Color(72, 32, 84);
 uint32_t matthewRed = strip.Color(123, 10, 3); //(52,0,0) previously
 uint32_t piss = strip.Color(190, 161, 4);
 uint32_t bearCyan = strip.Color(25, 35, 215);
+uint32_t off = strip.Color(0,0,0);
 
 bool newCommand = false;
 
@@ -110,10 +111,26 @@ void ProcessCommand() {
         snakeAnimation(piss, 31, 12);
         break;
 
-      case RIO_msgs_enum::TEST:
-        Serial.println("9,8,Test command received");
-        alternatingWipe(matthewRed, piss, 12);
+      case RIO_msgs_enum::CLIMBLEFTTRUE:
+        Serial.println("9,8, climber left on command received");
+        partialLighting(greenReady, 1, 37, 75);
         break;
+
+      case RIO_msgs_enum::CLIMBLEFTFALSE:
+        Serial.println("9,9, climber left off command received");
+        partialLighting(off, 1, 37, 75);
+        break;
+
+      case RIO_msgs_enum::CLIMBRIGHTTRUE:
+        Serial.println("9,8, climber right on command received");
+        partialLighting(greenReady, 38, 75, 75);
+        break;
+
+      case RIO_msgs_enum::CLIMBRIGHTFALSE:
+        Serial.println("9,9, climber right off command received");
+        partialLighting(off, 38, 75, 75);
+        break;
+
 
       default:
         Serial.println("9,0,unknown command");
@@ -338,6 +355,7 @@ void setAll(uint32_t color) {
     strip.setPixelColor(i, color);
   }
 }
+
 void runningLights(uint32_t color, int waveDelay) {
    while (!newCommand){
   for (int j = 0; j < strip.numPixels() * 2; j++) {
@@ -418,5 +436,21 @@ void radarSweep(uint32_t color, int length, int speed) {
      }
     position = (position + 1) % strip.numPixels();  // Move the sweep
     delay(speed);
+  }
+}
+
+void partialLighting( uint32_t color, int startPos, int endPos, int wait){
+  while (!newCommand){
+  for (int i = startPos; i <= endPos; i++){
+    strip.setPixelColor(i, color);
+    }
+
+    strip.show();
+    if (GetCommand()) {
+      newCommand = true;
+      break;
+    }
+
+    delay(wait);
   }
 }
