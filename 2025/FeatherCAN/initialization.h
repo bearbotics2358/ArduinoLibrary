@@ -11,7 +11,7 @@ struct configuration conf[NUM_OF_CONFIG];
 void initialize_config() {
 
   // for testing
-  conf[0].type = ALGAE;
+  conf[0].type = CORAL;
   // to ignore the test unit, use the following line for serial number instead of the real one below it
   conf[0].sn.set((uint32_t)0, (uint32_t)0, (uint32_t)0, (uint32_t)0);
   // conf[0].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
@@ -20,11 +20,14 @@ void initialize_config() {
   // conf[0].sn.set((uint32_t)0x920E71B5, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D2F2F);
   conf[0].featherCAN = 9;
 
-  conf[0].color_sensor_qty = 0;
-  conf[0].color_sensor_bus[0] = 0;
+  conf[0].color_sensor_qty = 1;
+  conf[0].color_sensor_bus[0] = 1;
   conf[0].color_sensor_bus[1] = 0;
 
-  conf[0].TOF_qty = 1;
+  conf[0].using_mux = 0;
+  conf[0].mux_bus = 0;
+
+  conf[0].TOF_qty = 0;
   conf[0].TOF_bus[0] = 1;
   conf[0].TOF_bus[1] = 0;
 
@@ -47,6 +50,9 @@ void initialize_config() {
   conf[1].color_sensor_qty = 1;
   conf[1].color_sensor_bus[0] = 2;
   conf[1].color_sensor_bus[1] = 0;
+
+  conf[1].using_mux = 0;
+  conf[1].mux_bus = 0;
 
   conf[1].TOF_qty = 0;
   conf[1].TOF_bus[0] = 0;
@@ -71,6 +77,9 @@ void initialize_config() {
   conf[2].color_sensor_bus[0] = 0;
   conf[2].color_sensor_bus[1] = 0;
 
+  conf[2].using_mux = 0;
+  conf[2].mux_bus = 0;
+
   conf[2].TOF_qty = 1;
   conf[2].TOF_bus[0] = 1;
   conf[2].TOF_bus[1] = 0;
@@ -84,15 +93,16 @@ void initialize_config() {
 
 
   conf[3].type = CLIMBER;
-  // FeatherCAN #8
-  conf[3].sn.set((uint32_t)0xB644C4E4, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D1A30);
-  conf[3].featherCAN = 8;
+  // FeatherCAN #9
+  conf[3].sn.set((uint32_t)0x920E71B5, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D2F2F);
+  conf[3].featherCAN = 9;
 
-  // temporary setup - no color sensors connected
-  // conf[3].color_sensor_qty = 2;
-  conf[3].color_sensor_qty = 0;
+  conf[3].color_sensor_qty = 2;
   conf[3].color_sensor_bus[0] = 1;
   conf[3].color_sensor_bus[1] = 2;
+
+  conf[3].using_mux = 0;
+  conf[3].mux_bus = 0;
 
   conf[3].TOF_qty = 0;
   conf[3].TOF_bus[0] = 0;
@@ -107,16 +117,21 @@ void initialize_config() {
 
 
   conf[4].type = BELLYPAN;
-  conf[4].sn.set((uint32_t)0x8D8DAD73, (uint32_t)0x51503235, (uint32_t)0x314A2020, (uint32_t)0xFF040223);
-  conf[4].featherCAN = 9;
+  // FeatherCAN #6
+  conf[4].sn.set((uint32_t)0x6FDE2932, (uint32_t)0x51503235, (uint32_t)0x314A2020, (uint32_t)0xFF062D32);
+  conf[4].featherCAN = 6;
 
-  conf[4].color_sensor_qty = 2;
+  conf[4].color_sensor_qty = 0;
   conf[4].color_sensor_bus[0] = 1;
   conf[4].color_sensor_bus[1] = 2;
 
-  conf[4].TOF_qty = 0;
-  conf[4].TOF_bus[0] = 0;
-  conf[4].TOF_bus[1] = 0;
+  conf[4].using_mux = 1;
+  conf[4].mux_bus = 1;
+
+  conf[4].TOF_qty = 3;
+  conf[4].TOF_bus[0] = 4;
+  conf[4].TOF_bus[1] = 3;
+  conf[4].TOF_bus[2] = 0;
 
   conf[4].deviceId[0] = 4;
   conf[4].api[0] = 4;
@@ -130,6 +145,10 @@ void initialize_config() {
 /*
  
 Board Serial Numbers:
+
+
+  // FeatherCAN #6
+  conf[2].sn.set((uint32_t)0x6FDE2932, (uint32_t)0x51503235, (uint32_t)0x314A2020, (uint32_t)0xFF062D32);
 
   // FeatherCAN #7
   conf[2].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
@@ -146,6 +165,14 @@ Board Serial Numbers:
   // FeatherCAN 11 (I think)
   conf[1].sn.set((uint32_t)0xFAFF85AA, (uint32_t)0x51504847, (uint32_t)0x35202020, (uint32_t)0xFF032A3B);
  
+
+  // inital Climber:
+  // FeatherCAN #8
+  conf[3].sn.set((uint32_t)0xB644C4E4, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D1A30);
+  conf[3].featherCAN = 8;
+
+
+
  
   // from previous year, other serial numbers:
 
