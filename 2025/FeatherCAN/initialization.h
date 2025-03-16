@@ -42,13 +42,12 @@ void initialize_config() {
 // CAN ID: 0 1010 0000 1000 AAAA AAAA AADD DDDD
 
   conf[1].type = CORAL;
-  // This is the REV CAN Encoder from a couple of years ago:
-  // FeatherCAN 11 (I think)
-  conf[1].sn.set((uint32_t)0xFAFF85AA, (uint32_t)0x51504847, (uint32_t)0x35202020, (uint32_t)0xFF032A3B);
+  // FeatherCAN #8
+  conf[1].sn.set((uint32_t)0xB644C4E4, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D1A30);
   conf[1].featherCAN = 11;
 
   conf[1].color_sensor_qty = 1;
-  conf[1].color_sensor_bus[0] = 2;
+  conf[1].color_sensor_bus[0] = 1;
   conf[1].color_sensor_bus[1] = 0;
 
   conf[1].using_mux = 0;
@@ -97,7 +96,7 @@ void initialize_config() {
   conf[3].sn.set((uint32_t)0x920E71B5, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D2F2F);
   conf[3].featherCAN = 9;
 
-  conf[3].color_sensor_qty = 2;
+  conf[3].color_sensor_qty = 0;
   conf[3].color_sensor_bus[0] = 1;
   conf[3].color_sensor_bus[1] = 2;
 
