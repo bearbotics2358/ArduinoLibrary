@@ -132,6 +132,10 @@ uint32_t proximity[COLOR_SENSOR_MAX];
 
 int16_t distance[TOF_SENSOR_MAX];
 
+// were we able to initialize the sensor?
+int proximity_sensor_exists[COLOR_SENSOR_MAX];
+int distance_sensor_exists[TOF_SENSOR_MAX];
+
 #define PCAADDR 0x70
 
 void pcaselect(uint8_t i) {
@@ -167,9 +171,11 @@ void CAN_setup() {
 
 void Color_sensor_setup() {
   int i;
+  int j;
 
   for(int i = 0; i < COLOR_SENSOR_MAX; i++) {
     proximity[i] = 0;
+    proximity_sensor_exists[i] = 0;
   }
   
   // Setup Color Sensors
@@ -183,17 +189,30 @@ void Color_sensor_setup() {
       } else {
         Serial.print("CONFIGURATION ERROR: color_sensor_bus is not valid: ");
         Serial.println(conf[board].color_sensor_bus[i]);
-        while(1) {}
+        proximity_sensor_exists[i] = 0;          
+        Serial.println("Setting proximity sensor to not existing");
       }
   
+      proximity_sensor_exists[i] = 1;          
+      j = 0;
       while(!cs[i].CheckDeviceID()) {
         Serial.print("Device ID NOT ok for device ");
         Serial.println(i);
         delay(1000);
+        j++;
+        if(j >= 5) {
+          proximity_sensor_exists[i] = 0;          
+          Serial.println("Setting proximity sensor to not existing");
+          break;
+        }
       }
 
+      // with no sensor attached, is dying here somewhere, before next print
+
+      Serial.println("Before InitializeDevice");
       cs[i].InitializeDevice();
 
+      Serial.println("Before Configure IR LED");
       // Configure IR LED
       cs[i].ConfigureProximitySensorLED(
         rev::ColorSensorV3::LEDPulseFrequency::k100kHz, rev::ColorSensorV3::LEDCurrent::kPulse100mA, 128);
@@ -222,87 +241,96 @@ void Color_sensor_loop()
   int i;
   
   for(i = 0; i < conf[board].color_sensor_qty; i++) {
-    // wait for Proximity Sensor Ready (and Light Sensor Ready)
-    do {
-      cs[i].Read(rev::ColorSensorV3::Register::kMainStatus, 1, data);
-      status = data[0];
+    if(proximity_sensor_exists[i]) {
+      // wait for Proximity Sensor Ready (and Light Sensor Ready)
+      do {
+        cs[i].Read(rev::ColorSensorV3::Register::kMainStatus, 1, data);
+        status = data[0];
+        
+        // Serial.print("\nMainStatus: 0x");
+        // Serial.print(status, HEX);
+        delay(10);
+  
+  // is a test needed here to bail after a certain time?
+  
+        
+      } while ((status & 1) != 1); // 1 for PS, 9 for LS & PS
+    
+      Serial.print("MainStatus: 0x");
+      Serial.print(status, HEX);
+  
+      proximity[i] = cs[i].GetProximity();
+      Serial.print("  Proximity: ");
+      Serial.print(proximity[i]);
+    
+      /*
+      color1 = cs.GetColor();
+      Serial.print("  Color: 0x");
+      Serial.print(color1, HEX);
+      Serial.print(" , ");
+      Serial.print((color1 >> 16) & 0x00ff);
+      Serial.print(" , ");
+      Serial.print((color1 >> 8) & 0x00ff);
+      Serial.print(" , ");
+      Serial.print(color1 & 0x00ff);
+      */
+    
+      // manually get colors
+      /*
+      // individually
+      cs.Read(rev::ColorSensorV3::Register::kDataRed, 3, data);
+      color1 = ((data[2] << 16) | (data[1]) | data[0]) & 0x0FFFFF;
+      Serial.print(" Red: ");
+      Serial.print(color1);
+    
+      cs.Read(rev::ColorSensorV3::Register::kDataGreen, 3, data);
+      color1 = ((data[2] << 16) | (data[1]) | data[0]) & 0x0FFFFF;
+      Serial.print(" Green: ");
+      Serial.print(color1);
+    
+      cs.Read(rev::ColorSensorV3::Register::kDataBlue, 3, data);
+      color1 = ((data[2] << 16) | (data[1]) | data[0]) & 0x0FFFFF;
+      Serial.print(" Blue: ");
+      Serial.print(color1);
+      */
+    
+      /*
+      // get colors all at once
+      cs.Read(rev::ColorSensorV3::Register::kDataInfrared, 12, data);
+    
+      // Red
+      index = 9;
+      red_ch = ((data[index + 2] << 16) | (data[index + 1]) | data[index]) & 0x0FFFFF;
+      Serial.print(" Red: ");
+      Serial.print(red_ch);
+    
+      // Green
+      index = 3;
+      green_ch = ((data[index + 2] << 16) | (data[index + 1]) | data[index]) & 0x0FFFFF;
+      Serial.print(" Green: ");
+      Serial.print(green_ch);
+    
+      // Blue
+      index = 6;
+      blue_ch = ((data[index + 2] << 16) | (data[index + 1]) | data[index]) & 0x0FFFFF;
+      Serial.print(" Blue: ");
+      Serial.print(blue_ch);
+      */
       
-      // Serial.print("\nMainStatus: 0x");
-      // Serial.print(status, HEX);
-      delay(10);
-    } while ((status & 1) != 1); // 1 for PS, 9 for LS & PS
-  
-    Serial.print("MainStatus: 0x");
-    Serial.print(status, HEX);
+      
+      /*
+      Serial.print("IR: ");
+      Serial.println(cs.GetIR());
+      
+      Serial.print("MainStatus: 0x");
+      cs.Read(rev::ColorSensorV3::Register::kMainStatus, 1, data);
+      Serial.println(data[0], HEX);
+      */
 
-    proximity[i] = cs[i].GetProximity();
-    Serial.print("  Proximity: ");
-    Serial.print(proximity[i]);
-  
-    /*
-    color1 = cs.GetColor();
-    Serial.print("  Color: 0x");
-    Serial.print(color1, HEX);
-    Serial.print(" , ");
-    Serial.print((color1 >> 16) & 0x00ff);
-    Serial.print(" , ");
-    Serial.print((color1 >> 8) & 0x00ff);
-    Serial.print(" , ");
-    Serial.print(color1 & 0x00ff);
-    */
-  
-    // manually get colors
-    /*
-    // individually
-    cs.Read(rev::ColorSensorV3::Register::kDataRed, 3, data);
-    color1 = ((data[2] << 16) | (data[1]) | data[0]) & 0x0FFFFF;
-    Serial.print(" Red: ");
-    Serial.print(color1);
-  
-    cs.Read(rev::ColorSensorV3::Register::kDataGreen, 3, data);
-    color1 = ((data[2] << 16) | (data[1]) | data[0]) & 0x0FFFFF;
-    Serial.print(" Green: ");
-    Serial.print(color1);
-  
-    cs.Read(rev::ColorSensorV3::Register::kDataBlue, 3, data);
-    color1 = ((data[2] << 16) | (data[1]) | data[0]) & 0x0FFFFF;
-    Serial.print(" Blue: ");
-    Serial.print(color1);
-    */
-  
-    /*
-    // get colors all at once
-    cs.Read(rev::ColorSensorV3::Register::kDataInfrared, 12, data);
-  
-    // Red
-    index = 9;
-    red_ch = ((data[index + 2] << 16) | (data[index + 1]) | data[index]) & 0x0FFFFF;
-    Serial.print(" Red: ");
-    Serial.print(red_ch);
-  
-    // Green
-    index = 3;
-    green_ch = ((data[index + 2] << 16) | (data[index + 1]) | data[index]) & 0x0FFFFF;
-    Serial.print(" Green: ");
-    Serial.print(green_ch);
-  
-    // Blue
-    index = 6;
-    blue_ch = ((data[index + 2] << 16) | (data[index + 1]) | data[index]) & 0x0FFFFF;
-    Serial.print(" Blue: ");
-    Serial.print(blue_ch);
-    */
-    
-    
-    /*
-    Serial.print("IR: ");
-    Serial.println(cs.GetIR());
-    
-    Serial.print("MainStatus: 0x");
-    cs.Read(rev::ColorSensorV3::Register::kMainStatus, 1, data);
-    Serial.println(data[0], HEX);
-    */
-    
+    } else {
+      proximity[i] = 0xDEAD;
+      Serial.print("  Proximity: DEAD");
+    }
     Serial.println();
   }
 }
@@ -310,6 +338,12 @@ void Color_sensor_loop()
 void TOF_sensor_setup() {
   int i;
   int ret = 0;
+
+  for(int i = 0; i < COLOR_SENSOR_MAX; i++) {
+    distance[i] = 0;
+    distance_sensor_exists[i] = 0;
+  }
+  
   
   // Setup TOF Sensors
   if(conf[board].TOF_qty) {
@@ -336,6 +370,10 @@ void TOF_sensor_setup() {
         if(!ret) {
           Serial.print(F("Error on init of VL sensor: "));
           Serial.println(vl53[i].vl_status);
+
+// FIX ME - just save flag as sensor not working          
+          
+          
           while (1)       delay(10);
         }
         Serial.println(F("VL53L1X sensor OK!"));
@@ -346,6 +384,10 @@ void TOF_sensor_setup() {
         if (! vl53[i].startRanging()) {
           Serial.print(F("Couldn't start ranging: "));
           Serial.println(vl53[i].vl_status);
+
+// FIX ME - just save flag as sensor not working          
+          
+          
           while (1)       delay(10);
         }
         Serial.println(F("Ranging started"));
@@ -382,6 +424,10 @@ void TOF_sensor_setup() {
         if(!ret) {
           Serial.print(F("Error on init of VL sensor: "));
           Serial.println(vl53[i].vl_status);
+
+// FIX ME - just save flag as sensor not working          
+          
+          
           while (1)       delay(10);
         }
         Serial.println(F("VL53L1X sensor OK!"));
@@ -392,6 +438,10 @@ void TOF_sensor_setup() {
         if (! vl53[i].startRanging()) {
           Serial.print(F("Couldn't start ranging: "));
           Serial.println(vl53[i].vl_status);
+
+// FIX ME - just save flag as sensor not working          
+          
+          
           while (1)       delay(10);
         }
         Serial.println(F("Ranging started"));
@@ -481,9 +531,12 @@ void setup() {
   digitalWrite(ledPin, 1);
   
   Wire.begin();
+  // Wire.setTimeout(5);
   // Wire.setClock(10000);
 
+
   myWire.begin();
+  // myWire.setTimeout(5);
 
   // Assign pins A3 & A4 to SERCOM functionality for 2nd I2C bus
   pinPeripheral(A3, PIO_SERCOM_ALT);
