@@ -91,8 +91,8 @@ void ProcessCommand() {
         runningLights(matthewRed, 55);
         break;
 
-      case RIO_msgs_enum::ALGAE_HELD:
-        Serial.println("9,4,ALGAE_HELD command received");
+      case RIO_msgs_enum::ELEVATOR_L3_ALGAE:
+        Serial.println("9,4,ELEVATOR_L3_ALGAE command received");
         theaterChase(algaeAqua, 45);
         break;
 
@@ -103,7 +103,7 @@ void ProcessCommand() {
 
       case RIO_msgs_enum::ELEVATOR_L3:
         Serial.println("9,6,ELEVATOR_L3 command received");
-        Strobe(superPink, 2, 50, 50);
+        Breathing(100, superPink, 25, 50);
         break;
 
       case RIO_msgs_enum::IDK:
@@ -452,5 +452,34 @@ void partialLighting( uint32_t color, int startPos, int endPos, int wait){
     }
 
     delay(wait);
+  }
+}
+
+void Breathing(int wait, uint32_t colorOne, int bpm, int currentBrightness) {
+  int direction = -1;  // Start by dimming (-1), will switch to brightening (+1)
+
+  while (!newCommand) {  // Infinite loop for continuous breathing
+    currentBrightness += (bpm * direction); // Adjust brightness
+
+    // Reverse direction when brightness hits limits
+    if (currentBrightness <= 0) {
+      currentBrightness = 0;
+      direction = 1;  // Switch to increasing brightness
+    } 
+    else if (currentBrightness >= 255) {
+      currentBrightness = 255;
+      direction = -1; // Switch to decreasing brightness
+    }
+    // Apply brightness and color to the entire strip
+    strip.setBrightness(currentBrightness);
+    for (int i = 0; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, colorOne);
+    }
+    strip.show();
+    if (GetCommand()) {
+      newCommand = true;
+      break;
+    }
+    delay(wait);  // Control breathing speed
   }
 }
