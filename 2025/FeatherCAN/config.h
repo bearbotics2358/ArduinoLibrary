@@ -26,10 +26,10 @@ struct configuration {
   enum boardType type;
 	SAMD21SerialNumber sn;
   int featherCAN;
-  int color_sensor_qty;
-  int color_sensor_bus[2];
   int using_mux;
   int mux_bus;
+  int color_sensor_qty;
+  int color_sensor_bus[2];
   int TOF_qty;
   int TOF_bus[3];
   uint32_t deviceId[2];

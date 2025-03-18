@@ -180,51 +180,107 @@ void Color_sensor_setup() {
   
   // Setup Color Sensors
   if(conf[board].color_sensor_qty) {
-    // select I2C bus that Color Sensor is connected to
-    for(i = 0; i < conf[board].color_sensor_qty; i++) {
-      if(conf[board].color_sensor_bus[i] == 1) {
-        cs[i].setWire(&Wire);
-      } else if(conf[board].color_sensor_bus[i] == 2) {
-        cs[i].setWire(&myWire);
-      } else {
-        Serial.print("CONFIGURATION ERROR: color_sensor_bus is not valid: ");
-        Serial.println(conf[board].color_sensor_bus[i]);
-        proximity_sensor_exists[i] = 0;          
-        Serial.println("Setting proximity sensor to not existing");
-      }
-  
-      proximity_sensor_exists[i] = 1;          
-      j = 0;
-      while(!cs[i].CheckDeviceID()) {
-        Serial.print("Device ID NOT ok for device ");
-        Serial.println(i);
-        delay(1000);
-        j++;
-        if(j >= 5) {
+    if(conf[board].using_mux == 0) {
+      // For directly attached to I2C busses on the Feather
+      // select I2C bus that Color Sensor is connected to
+      for(i = 0; i < conf[board].color_sensor_qty; i++) {
+        if(conf[board].color_sensor_bus[i] == 1) {
+          cs[i].setWire(&Wire);
+        } else if(conf[board].color_sensor_bus[i] == 2) {
+          cs[i].setWire(&myWire);
+        } else {
+          Serial.print("CONFIGURATION ERROR: color_sensor_bus is not valid: ");
+          Serial.println(conf[board].color_sensor_bus[i]);
           proximity_sensor_exists[i] = 0;          
           Serial.println("Setting proximity sensor to not existing");
-          break;
         }
+    
+        proximity_sensor_exists[i] = 1;          
+        j = 0;
+        while(!cs[i].CheckDeviceID()) {
+          Serial.print("Device ID NOT ok for device ");
+          Serial.println(i);
+          delay(1000);
+          j++;
+          if(j >= 5) {
+            proximity_sensor_exists[i] = 0;          
+            Serial.println("Setting proximity sensor to not existing");
+            break;
+          }
+        }
+  
+        // with no sensor attached, is dying here somewhere, before next print
+  
+        Serial.println("Before InitializeDevice");
+        cs[i].InitializeDevice();
+  
+        Serial.println("Before Configure IR LED");
+        // Configure IR LED
+        cs[i].ConfigureProximitySensorLED(
+          rev::ColorSensorV3::LEDPulseFrequency::k100kHz, rev::ColorSensorV3::LEDCurrent::kPulse100mA, 128);
+  
+        Serial.print("MainCtrl after Initialize: 0x");
+        cs[i].Read(rev::ColorSensorV3::Register::kMainCtrl, 1, data);
+        Serial.println(data[0], HEX);
+    
+        // Clear the reset flag
+        Serial.print("HasReset(): ");
+        Serial.println(cs[i].HasReset());
       }
 
-      // with no sensor attached, is dying here somewhere, before next print
+    } else {
+      // all Color sensors are on I2C mux
+      // do necessary setup here
+      
+      for(i = 0; i < conf[board].color_sensor_qty; i++) {
+        // choose appropriate port on the I2C multiplexer
+        pcaselect(conf[board].color_sensor_bus[i]);
 
-      Serial.println("Before InitializeDevice");
-      cs[i].InitializeDevice();
-
-      Serial.println("Before Configure IR LED");
-      // Configure IR LED
-      cs[i].ConfigureProximitySensorLED(
-        rev::ColorSensorV3::LEDPulseFrequency::k100kHz, rev::ColorSensorV3::LEDCurrent::kPulse100mA, 128);
-
-      Serial.print("MainCtrl after Initialize: 0x");
-      cs[i].Read(rev::ColorSensorV3::Register::kMainCtrl, 1, data);
-      Serial.println(data[0], HEX);
+        if(conf[board].mux_bus == 1) {
+          cs[i].setWire(&Wire);
+        } else if(conf[board].mux_bus == 2) {
+          cs[i].setWire(&myWire);
+        } else {
+          Serial.print("CONFIGURATION ERROR: color_sensor mux_bus is not valid: ");
+          Serial.println(conf[board].mux_bus);
+          proximity_sensor_exists[i] = 0;          
+          Serial.println("Setting proximity sensor to not existing");
+        }
+    
+        proximity_sensor_exists[i] = 1;          
+        j = 0;
+        while(!cs[i].CheckDeviceID()) {
+          Serial.print("Device ID NOT ok for device ");
+          Serial.println(i);
+          delay(1000);
+          j++;
+          if(j >= 5) {
+            proximity_sensor_exists[i] = 0;          
+            Serial.println("Setting proximity sensor to not existing");
+            break;
+          }
+        }
   
-      // Clear the reset flag
-      Serial.print("HasReset(): ");
-      Serial.println(cs[i].HasReset());
-    }
+        // with no sensor attached, is dying here somewhere, before next print
+  
+        Serial.println("Before InitializeDevice");
+        cs[i].InitializeDevice();
+  
+        Serial.println("Before Configure IR LED");
+        // Configure IR LED
+        cs[i].ConfigureProximitySensorLED(
+          rev::ColorSensorV3::LEDPulseFrequency::k100kHz, rev::ColorSensorV3::LEDCurrent::kPulse100mA, 128);
+  
+        Serial.print("MainCtrl after Initialize: 0x");
+        cs[i].Read(rev::ColorSensorV3::Register::kMainCtrl, 1, data);
+        Serial.println(data[0], HEX);
+    
+        // Clear the reset flag
+        Serial.print("HasReset(): ");
+        Serial.println(cs[i].HasReset());
+      }
+    }  
+  
   }
 
 }
@@ -242,6 +298,11 @@ void Color_sensor_loop()
   
   for(i = 0; i < conf[board].color_sensor_qty; i++) {
     if(proximity_sensor_exists[i]) {
+      if(conf[board].using_mux == 1) {
+        // choose appropriate port on the I2C multiplexer
+        pcaselect(conf[board].color_sensor_bus[i]);
+      }  
+        
       // wait for Proximity Sensor Ready (and Light Sensor Ready)
       do {
         cs[i].Read(rev::ColorSensorV3::Register::kMainStatus, 1, data);
@@ -326,7 +387,7 @@ void Color_sensor_loop()
       cs.Read(rev::ColorSensorV3::Register::kMainStatus, 1, data);
       Serial.println(data[0], HEX);
       */
-
+  
     } else {
       proximity[i] = 0xDEAD;
       Serial.print("  Proximity: DEAD");
