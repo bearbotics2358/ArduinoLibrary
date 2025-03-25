@@ -19,7 +19,7 @@
 
 #define DEBUG 1
 #define LED_PIN 6
-#define LED_COUNT 75
+#define LED_COUNT 70
 #define MAXLEN 450
 
 char rx_buff[MAXLEN];
