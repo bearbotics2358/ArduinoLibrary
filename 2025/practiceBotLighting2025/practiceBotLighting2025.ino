@@ -384,9 +384,9 @@ void snakeAnimation(uint32_t color, int length, int delayTime) {
   while (!newCommand) {             // Continue until a new command is received
     strip.clear();
 
-       // Draw the snake with a dimming tail
+    // Draw the snake with a dimming tail
     for (int i = 0; i < length; i++) {
-      int pixel = (head - i + strip.numPixels()) % strip.numPixels();
+      int pixel = (head - i * direction + LED_COUNT) % LED_COUNT;
       
       // Calculate dimming factor for the tail
       float dimFactor = 1.0 - (float)i / length;  // Dim factor decreases from head to tail
@@ -394,21 +394,21 @@ void snakeAnimation(uint32_t color, int length, int delayTime) {
       uint8_t g = ((color >> 8) & 0xFF) * dimFactor;
       uint8_t b = (color & 0xFF) * dimFactor;
 
-      strip.setPixelColor(pixel, strip.Color(r, g, b));
+      strip.setPixelColor(pixel, r, g, b);
     }
 
     // Move the snake
-    head += direction;
+    head = (head + direction + LED_COUNT) % LED_COUNT;
 
     // Handle boundaries
-    if (head >= strip.numPixels() || head < 0) {
+    if (head == LED_COUNT - 1 || head == 0) {
       direction = -direction;  // Reverse direction at the ends
-      head += direction;
     }
-      if (GetCommand()) {
+
+    if (GetCommand()) {
       newCommand = true;
       break;
-     }
+    }
 
     strip.show();
     delay(delayTime);
