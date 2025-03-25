@@ -10,6 +10,7 @@ struct configuration conf[NUM_OF_CONFIG];
 
 void initialize_config() {
 
+/**********************************************************************************************************/
   // for testing
   conf[0].type = CORAL;
   // to ignore the test unit, use the following line for serial number instead of the real one below it
@@ -53,6 +54,7 @@ void initialize_config() {
 
 // CAN ID: 0 1010 0000 1000 AAAA AAAA AADD DDDD
 
+/**********************************************************************************************************/
   conf[1].type = CORAL;
   // FeatherCAN #8
   conf[1].sn.set((uint32_t)0xB644C4E4, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D1A30);
@@ -77,12 +79,11 @@ void initialize_config() {
   conf[1].canId[1] = 0;
 
 
+/**********************************************************************************************************/
   conf[2].type = ALGAE;
-  // the following serial number MIGHT be featherCAN #8:
-  // conf[2].sn.set((uint32_t)0xB644C4E4, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D1A30);
-  // FeatherCAN #7
-  conf[2].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
-  conf[2].featherCAN = 7;
+  // FeatherCAN #10
+  conf[2].sn.set((uint32_t)0x51E05DD4, (uint32_t)0x51503235, (uint32_t)0x314A2020, (uint32_t)0xFF06293D);
+  conf[2].featherCAN = 10;
 
   conf[2].color_sensor_qty = 0;
   conf[2].color_sensor_bus[0] = 0;
@@ -103,6 +104,7 @@ void initialize_config() {
   conf[2].canId[1] = 0;
 
 
+/**********************************************************************************************************/
   conf[3].type = CLIMBER;
   // FeatherCAN #9
   conf[3].sn.set((uint32_t)0x920E71B5, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D2F2F);
@@ -127,6 +129,7 @@ void initialize_config() {
   conf[3].canId[1] = 0;
 
 
+/**********************************************************************************************************/
   conf[4].type = BELLYPAN;
   // FeatherCAN #6
   conf[4].sn.set((uint32_t)0x6FDE2932, (uint32_t)0x51503235, (uint32_t)0x314A2020, (uint32_t)0xFF062D32);

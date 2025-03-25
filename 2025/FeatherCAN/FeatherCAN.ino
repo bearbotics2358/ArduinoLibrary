@@ -585,7 +585,7 @@ void setup() {
   // declare the ledPin as an OUTPUT:
   pinMode(ledPin, OUTPUT);
 
-  delay(5000);
+  // delay(5000);
 
   Serial.println("in setup ...");
 
@@ -671,7 +671,7 @@ void setup() {
     TOF_sensor_setup();
   }
   
-  delay(2000);
+  // delay(2000);
 
 
 
@@ -866,7 +866,7 @@ void loop() {
       
   case ALGAE:
     packAlgaeMsg(angle_f, distance[0]);
-    if(proximity[0] > 1500) {
+    if(distance[0] <= 300) {
       // detect
       strip.setPixelColor(1, 0x001000);      
     } else {
