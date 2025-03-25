@@ -130,7 +130,7 @@ extern float angle_f;
 
 uint32_t proximity[COLOR_SENSOR_MAX];
 
-int16_t distance[TOF_SENSOR_MAX];
+uint16_t distance[TOF_SENSOR_MAX];
 
 // were we able to initialize the sensor?
 int proximity_sensor_exists[COLOR_SENSOR_MAX];
