@@ -266,14 +266,21 @@ void loop() {
   for(i = 0; i < MAX_CAN_IDS; i++) {
     switch(i) {
       case 0: // CORAL
+        angle_f = 15.0;
+        proximity[0] = 1600;
         packCoralMsg(angle_f, proximity[0]);
         break;
 
       case 1: // ALGAE
+        angle_f = 30.0;
+        distance[0] = 250;
         packAlgaeMsg(angle_f, distance[0]);
         break;
 
       case 2: // CLIMBER          
+        angle_f = 45.0;
+        proximity[0] = 1625;
+        proximity[1] = 1650;
         packClimberMsg(angle_f, proximity);
         break;
 
