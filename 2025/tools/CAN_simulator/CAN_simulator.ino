@@ -86,7 +86,7 @@ unsigned char rxBuf[8];
 uint32_t canId[] = {0x0a080041, // CORAL
                      0x0a080082, // ALGAE
                      0x0a0800C3, // CLIMBER
-                     0x0a080104, // BELLAYPAN
+                     0x0a080104, // BELLYPAN
   };
 
 // Create CAN interface using MCP chip
