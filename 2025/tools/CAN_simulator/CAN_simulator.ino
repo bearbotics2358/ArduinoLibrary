@@ -280,7 +280,7 @@ void loop() {
       case 2: // CLIMBER          
         angle_f = 45.0;
         proximity[0] = 1625;
-        proximity[1] = 1650;
+        proximity[1] = 1200;
         packClimberMsg(angle_f, proximity);
         break;
 

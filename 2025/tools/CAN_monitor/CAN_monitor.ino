@@ -104,7 +104,7 @@ void loop()
   uint16_t angle_d = 0;
   float angle_f = 0;
   uint32_t proximity = 0;
-  uint16_t diatance = 0;
+  uint16_t distance = 0;
   
   // Serial.print("REC: ");
   // Serial.println(CAN0.errorCountRX());
@@ -189,6 +189,8 @@ void loop()
   
         if((rxId & 0x3ffff000) == 0x0A080000) {
           // Team CAN messages
+          // # print("\033[31mRed Text (31)\033[0m")
+          // # print("\033[32mGreen Text (32)\033[0m")              
           switch(rxId & 0x3fffffff) {
             case 0x0a080041: // CORAL
               Serial.print("  CORAL \traw angle: ");
@@ -196,9 +198,17 @@ void loop()
               angle_f = (1.0 * angle_d) / 10.0;
               Serial.print(angle_f);
 
-              Serial.print("\tproximity: ");
               proximity = ((uint16_t)rxBuf[2] << 8) | (rxBuf[3]);
+              if(proximity < 1500) {
+                // Red
+                Serial.print("\e[31m");
+              } else {
+                // Green
+                Serial.print("\e[32m");
+              }
+              Serial.print("\tproximity: ");
               Serial.print(proximity);
+              Serial.print("\e[0m");
               
               break;
                           
@@ -208,7 +218,17 @@ void loop()
               angle_f = (1.0 * angle_d) / 10.0;
               Serial.print(angle_f);
 
-              Serial.print("\tdistance: 250");
+              distance = ((uint16_t)rxBuf[2] << 8) | (rxBuf[3]);
+              if(distance > 300) {
+                // Red
+                Serial.print("\e[31m");
+              } else {
+                // Green
+                Serial.print("\e[32m");
+              }
+              Serial.print("\tdistance: ");
+              Serial.print(distance);
+              Serial.print("\e[0m");
               
               break;
                           
@@ -218,13 +238,29 @@ void loop()
               angle_f = (1.0 * angle_d) / 10.0;
               Serial.print(angle_f);
               
-              Serial.print("\tleft proximity: ");
               proximity = ((uint16_t)rxBuf[2] << 8) | (rxBuf[3]);
+              if(proximity < 1500) {
+                // Red
+                Serial.print("\e[31m");
+              } else {
+                // Green
+                Serial.print("\e[32m");
+              }
+              Serial.print("\tleft proximity: ");
               Serial.print(proximity);
+              Serial.print("\e[0m");
               
-              Serial.print("\tright proximity: ");
               proximity = ((uint16_t)rxBuf[4] << 8) | (rxBuf[5]);
+              if(proximity < 1500) {
+                // Red
+                Serial.print("\e[31m");
+              } else {
+                // Green
+                Serial.print("\e[32m");
+              }
+              Serial.print("\tright proximity: ");
               Serial.print(proximity);
+              Serial.print("\e[0m");
               
               
               break;
