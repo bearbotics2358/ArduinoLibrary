@@ -16,7 +16,7 @@ void packAlgaeMsg(float angle_f, uint16_t tofDistance);
 void packClimberMsg(float angle_f, uint32_t prox[]);
 
 // pack Belly pan TOF sensor data into CAN message
-void packBellypanTOFMsg(int16_t tofDistance[]);
+void packBellypanTOFMsg(uint16_t tofDistance[]);
 
 
 // pack angle data into CAN message

@@ -76,7 +76,7 @@ void packClimberMsg(float angle_f, uint32_t prox[])
 
 
 // pack Belly pan TOF sensor data into CAN message
-void packBellypanTOFMsg(int16_t tofDistance[])
+void packBellypanTOFMsg(uint16_t tofDistance[])
 {
   data[0] = (tofDistance[0] >> 8) & 0x00ff;
   data[1] = tofDistance[0] & 0x00ff;
