@@ -29,6 +29,8 @@ int loop_cnt = 0;
 #define MAX_ADDRESSES 10
 uint32_t addresses[MAX_ADDRESSES];
 
+char s1[256];
+
 void setup()
 {
   int i;
@@ -38,8 +40,8 @@ void setup()
   Serial.begin(115200);
 
   // so we can see the startup messages
-  // while(!Serial) ;
-  delay(2000);
+  while(!Serial) ;
+  // delay(2000);
 
 
   Serial.println("starting...");
@@ -85,8 +87,13 @@ void setup()
   delay(5000);
   Serial.println("done");
   */
+
+  // clear screen
+  Serial.print("\e[H\e[J");
   
   digitalWrite(LED, 0);
+
+  // delay(2000);
 }
 
 void loop()
@@ -94,6 +101,10 @@ void loop()
   int ret; 
   int i;
   int addr_index;
+  uint16_t angle_d = 0;
+  float angle_f = 0;
+  uint32_t proximity = 0;
+  uint16_t diatance = 0;
   
   // Serial.print("REC: ");
   // Serial.println(CAN0.errorCountRX());
@@ -134,6 +145,7 @@ void loop()
           if(addresses[i] == 0) {
             // found empty slot
             addr_index = i;
+            addresses[addr_index] = rxId;
             break;     
           }
         }
@@ -143,6 +155,17 @@ void loop()
         // no available slots
         Serial.println("No available address slots");
       } else {
+        // place cursor at the beginning of the appropriate line
+        sprintf(s1, "\e[%d;1H", addr_index + 1);
+        Serial.print(s1);
+        /*
+        Serial.print("\x1B[[");
+        // Serial.print(addr_index + 1);
+        Serial.print("1");
+        Serial.print(";1H");
+        */
+        // clear to end of line
+        Serial.print("\e[K");
         // print the message            
         if((rxId & 0x80000000) == 0x80000000)     // Determine if ID is standard (11 bits) or extended (29 bits)
           sprintf(msgString, "%.8lX ", (rxId & 0x1FFFFFFF));
@@ -165,8 +188,55 @@ void loop()
         }
   
         if((rxId & 0x3ffff000) == 0x0A080000) {
-          // Team CAN message
-          // Serial.print(" **");
+          // Team CAN messages
+          switch(rxId & 0x3fffffff) {
+            case 0x0a080041: // CORAL
+              Serial.print("  CORAL \traw angle: ");
+              angle_d = ((uint16_t)rxBuf[0] << 8) | (rxBuf[1]);
+              angle_f = (1.0 * angle_d) / 10.0;
+              Serial.print(angle_f);
+
+              Serial.print("\tproximity: ");
+              proximity = ((uint16_t)rxBuf[2] << 8) | (rxBuf[3]);
+              Serial.print(proximity);
+              
+              break;
+                          
+            case 0x0a080082: // ALGAE
+              Serial.print("  ALGAE \traw angle: ");
+              angle_d = (((uint16_t)rxBuf[0] << 8) | (rxBuf[1]));
+              angle_f = (1.0 * angle_d) / 10.0;
+              Serial.print(angle_f);
+
+              Serial.print("\tdistance: 250");
+              
+              break;
+                          
+            case 0x0a0800C3: // CLIMBER
+              Serial.print("  CLIMBER \traw angle: ");
+              angle_d = (((uint16_t)rxBuf[0] << 8) | (rxBuf[1]));
+              angle_f = (1.0 * angle_d) / 10.0;
+              Serial.print(angle_f);
+              
+              Serial.print("\tleft proximity: ");
+              proximity = ((uint16_t)rxBuf[2] << 8) | (rxBuf[3]);
+              Serial.print(proximity);
+              
+              Serial.print("\tright proximity: ");
+              proximity = ((uint16_t)rxBuf[4] << 8) | (rxBuf[5]);
+              Serial.print(proximity);
+              
+              
+              break;
+                          
+            case 0x0a080104: // BELLYPAN
+              Serial.print("  BELLYPAN");
+              break;
+                          
+            default:
+              Serial.print("  unknown");
+              break;
+          }
         }
         
         rx_err_cnt = CAN0.errorCountRX();
