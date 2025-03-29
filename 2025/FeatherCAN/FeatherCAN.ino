@@ -56,6 +56,7 @@
 #include "wiring_private.h" // pinPeripheral() function
 #include <mcp_can.h>
 #include <SPI.h>
+#include <wdt_samd21.h>
 
 #include "config.h"
 #include "initialization.h"
@@ -603,6 +604,17 @@ void setup() {
   pinPeripheral(A3, PIO_SERCOM_ALT);
   pinPeripheral(A4, PIO_SERCOM_ALT);
 
+  // Decide what we want LEDs to to at powerup
+  // indicate in setup with WHITE lights
+  // can change in the future to look at the RESET cause and only do WHITE if
+  // watchdog caused the reset
+  strip.begin(); 
+  // LEDs RED at powerup, until board is discovered
+  for(i = 0; i < NUMPIXELS; i++) {
+    strip.setPixelColor(i, 0x00ffffff);      
+  }
+  strip.show();                     // Refresh strip
+
 	// Init Thru Bore Encoder if appropriate
 
 	// Init CAN
@@ -613,17 +625,6 @@ void setup() {
   // delay(500);
 
   digitalWrite(ledPin, 1);
-
-	// Decide what we want LEDs to to at powerup
-	
-  strip.begin(); 
-  // LEDs RED at powerup, until board is discovered
-  for(i = 0; i < NUMPIXELS; i++) {
-    strip.setPixelColor(i, 0x005000);      
-  }
-  strip.show();                     // Refresh strip
-
-
 
 
   initialize_config();
@@ -665,7 +666,7 @@ void setup() {
   }
 
   Serial.println("about to check TOF");
-  delay(1000);
+  // delay(1000);
   // Handle any TOF Sensors
   if(conf[board].TOF_qty) {
     TOF_sensor_setup();
@@ -708,6 +709,7 @@ void setup() {
 
 #endif // #if 0
 
+  /*
   // initialize LEDs to blue
   for(i = 0; i < NUMPIXELS; i++) {
     strip.setPixelColor(i, 0x000050);      
@@ -717,11 +719,7 @@ void setup() {
   strip.setPixelColor(board, 0x500000);
   strip.show();                     // Refresh strip
   delay(1000);
-
-  // initialize LEDs to blue
-  for(i = 0; i < NUMPIXELS; i++) {
-    strip.setPixelColor(i, 0x000050);      
-  }
+  */
 
 	
   Serial.print("CAN ID: 0x");
@@ -742,6 +740,7 @@ void setup() {
   // initialize pulse capture
   init_timer_capture();
 
+  /*
   // delay before sending CAN messages
   for(i = 0; i < 5; i++) {
     digitalWrite(LED_BUILTIN, 0);
@@ -749,11 +748,26 @@ void setup() {
     digitalWrite(LED_BUILTIN, 1);
     delay(500);
   }
+  */
+
+  // initialize LEDs to blue
+  for(i = 0; i < NUMPIXELS; i++) {
+    strip.setPixelColor(i, 0x000050);      
+  }
+
+  // start watchdog timer
+  // Initialze WDT with a 1 sec. timeout
+  wdt_init ( WDT_CONFIG_PER_1K );
+  
 
 }
 
 void loop() {
   byte sndStat = 0;
+
+  // feed the watchdog
+  wdt_reset();
+
   
 #if CAN_ENABLED
   // empty RX buffer
