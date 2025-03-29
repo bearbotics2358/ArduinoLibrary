@@ -126,8 +126,9 @@ void loop()
     
     CAN0.readMsgBuf(&rxId, &len, rxBuf);      // Read data: len = data length, buf = data byte(s)
 
-    if(rxId != 0x00000000) {
+    if((rxId != 0x00000000) && ((rxId & 0x3ffff000) == 0x0A080000)) {
       // got something
+      // and it was from one of our devices - quick fix to not print messages that weren't from one of our sensors
 
       // look for address
       addr_index = -1;
@@ -201,10 +202,10 @@ void loop()
               proximity = ((uint16_t)rxBuf[2] << 8) | (rxBuf[3]);
               if(proximity < 1500) {
                 // Red
-                Serial.print("\e[31m");
+                Serial.print("\e[41m");
               } else {
                 // Green
-                Serial.print("\e[32m");
+                Serial.print("\e[42m");
               }
               Serial.print("\tproximity: ");
               Serial.print(proximity);
@@ -221,10 +222,10 @@ void loop()
               distance = ((uint16_t)rxBuf[2] << 8) | (rxBuf[3]);
               if(distance > 300) {
                 // Red
-                Serial.print("\e[31m");
+                Serial.print("\e[41m");
               } else {
                 // Green
-                Serial.print("\e[32m");
+                Serial.print("\e[42m");
               }
               Serial.print("\tdistance: ");
               Serial.print(distance);
@@ -241,10 +242,10 @@ void loop()
               proximity = ((uint16_t)rxBuf[2] << 8) | (rxBuf[3]);
               if(proximity < 1500) {
                 // Red
-                Serial.print("\e[31m");
+                Serial.print("\e[41m");
               } else {
                 // Green
-                Serial.print("\e[32m");
+                Serial.print("\e[42m");
               }
               Serial.print("\tleft proximity: ");
               Serial.print(proximity);
@@ -253,10 +254,10 @@ void loop()
               proximity = ((uint16_t)rxBuf[4] << 8) | (rxBuf[5]);
               if(proximity < 1500) {
                 // Red
-                Serial.print("\e[31m");
+                Serial.print("\e[41m");
               } else {
                 // Green
-                Serial.print("\e[32m");
+                Serial.print("\e[42m");
               }
               Serial.print("\tright proximity: ");
               Serial.print(proximity);
