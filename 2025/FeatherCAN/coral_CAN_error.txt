@@ -1,0 +1,4 @@
+20250328
+
+Error Sending Message... sndStat: 0x7 MCP_EFLG: 0x40 TEC: 0 REC: 0
+
