@@ -17,15 +17,7 @@ void initialize_config() {
   conf[0].sn.set((uint32_t)0, (uint32_t)0, (uint32_t)0, (uint32_t)0);
   // conf[0].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
 
-  // CORAL debug board
-  // FeatherCAN #11
-  // conf[0].sn.set((uint32_t)0xFAFF85AA, (uint32_t)0x51504847, (uint32_t)0x35202020, (uint32_t)0xFF032A3B);
-
-  // FeatherCAN #9
-  // conf[0].sn.set((uint32_t)0x920E71B5, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0D2F2F);
-  conf[0].featherCAN = 9;
-
-  conf[0].color_sensor_qty = 0;
+  conf[0].color_sensor_qty = 1;
   conf[0].color_sensor_bus[0] = 1;
   conf[0].color_sensor_bus[1] = 0;
 
@@ -92,7 +84,7 @@ void initialize_config() {
   conf[2].using_mux = 0;
   conf[2].mux_bus = 0;
 
-  conf[2].TOF_qty = 1;
+  conf[2].TOF_qty = 0;
   conf[2].TOF_bus[0] = 1;
   conf[2].TOF_bus[1] = 0;
 

@@ -766,7 +766,7 @@ void loop() {
   byte sndStat = 0;
 
   // feed the watchdog
-  wdt_reset();
+  wdt_reset(); 
 
   
 #if CAN_ENABLED
