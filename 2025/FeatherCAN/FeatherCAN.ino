@@ -97,6 +97,8 @@ Adafruit_VL53L1X vl53[] = {
 #define NUMPIXELS 2 // Number of LEDs in strip
 #define NEO_PIN 9 // NOTE: will have to confirm
 
+#define SENSOR_POWER_CONTROL 6 // Think this one is available
+
 // CAN variables
 unsigned long t_prev = 0;  // Variable to store last execution time
 const unsigned int t_intvl = 10;  // Transmit interval in milliseconds
@@ -296,6 +298,7 @@ void Color_sensor_loop()
   uint32_t blue_ch = 0;
   uint8_t index = 0;
   int i;
+  uint32_t status_count = 0;
   
   for(i = 0; i < conf[board].color_sensor_qty; i++) {
     if(proximity_sensor_exists[i]) {
@@ -309,8 +312,13 @@ void Color_sensor_loop()
         cs[i].Read(rev::ColorSensorV3::Register::kMainStatus, 1, data);
         status = data[0];
         
-        // Serial.print("\nMainStatus: 0x");
-        // Serial.print(status, HEX);
+        if((status_count % 10) == 0) {
+          Serial.println();
+          Serial.print(status_count);
+          Serial.print("  Color Sensor MainStatus: 0x");
+          Serial.println(status, HEX);
+        }
+        status_count++;
         delay(10);
   
   // is a test needed here to bail after a certain time?
@@ -583,12 +591,26 @@ void setup() {
   // wait for serial port connection
   // while(!Serial);
 
+  // cycle power to sensors
+  pinMode(SENSOR_POWER_CONTROL, OUTPUT);
+  digitalWrite(SENSOR_POWER_CONTROL, 1); // Power OFF
+  delay(100);
+  digitalWrite(SENSOR_POWER_CONTROL, 0); // Power ON
+  
   // declare the ledPin as an OUTPUT:
   pinMode(ledPin, OUTPUT);
 
   // delay(5000);
 
-  Serial.println("in setup ...");
+  // start watchdog timer
+  // Initialze WDT with a 1 sec. timeout
+  wdt_init ( WDT_CONFIG_PER_1K );
+  // wdt_init ( WDT_CONFIG_PER_2K );
+  
+  Serial.println();
+  Serial.println("Sensors to CAN");
+  
+  Serial.println("in setup - watchdog running ...");
 
   digitalWrite(ledPin, 1);
   
@@ -596,9 +618,14 @@ void setup() {
   // Wire.setTimeout(5);
   // Wire.setClock(10000);
 
+  // feed the watchdog
+  // wdt_reset(); 
 
   myWire.begin();
   // myWire.setTimeout(5);
+
+  // feed the watchdog
+  // wdt_reset(); 
 
   // Assign pins A3 & A4 to SERCOM functionality for 2nd I2C bus
   pinPeripheral(A3, PIO_SERCOM_ALT);
@@ -609,7 +636,7 @@ void setup() {
   // can change in the future to look at the RESET cause and only do WHITE if
   // watchdog caused the reset
   strip.begin(); 
-  // LEDs RED at powerup, until board is discovered
+  // LEDs WHITE at powerup
   for(i = 0; i < NUMPIXELS; i++) {
     strip.setPixelColor(i, 0x00ffffff);      
   }
@@ -620,8 +647,9 @@ void setup() {
 	// Init CAN
   CAN_setup();
   
-  Serial.println("REV Encoder test to CAN");
-  
+  // feed the watchdog
+  // wdt_reset(); 
+
   // delay(500);
 
   digitalWrite(ledPin, 1);
@@ -660,10 +688,16 @@ void setup() {
   Serial.print("Board config: ");
   Serial.println(board);
 
+  // feed the watchdog
+  // wdt_reset(); 
+
   // Handle any Color Sensors
   if(conf[board].color_sensor_qty) {
     Color_sensor_setup();
   }
+
+  // feed the watchdog
+  // wdt_reset(); 
 
   Serial.println("about to check TOF");
   // delay(1000);
@@ -734,7 +768,8 @@ void setup() {
 
 
 
-
+  // feed the watchdog
+  // wdt_reset(); 
 
   // for Thru Bore Encoder
   // initialize pulse capture
@@ -755,10 +790,6 @@ void setup() {
     strip.setPixelColor(i, 0x000050);      
   }
 
-  // start watchdog timer
-  // Initialze WDT with a 1 sec. timeout
-  wdt_init ( WDT_CONFIG_PER_1K );
-  
 
 }
 
@@ -954,6 +985,9 @@ void loop() {
 
 
   // delay(2000);
+
+  // feed the watchdog
+  // wdt_reset(); 
 
   delay(10);
   tx_msg_count++;
