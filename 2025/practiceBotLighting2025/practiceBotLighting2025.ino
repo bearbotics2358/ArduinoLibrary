@@ -41,6 +41,9 @@ uint32_t off = strip.Color(0,0,0);
 
 bool newCommand = false;
 
+bool isClimbLeft = false;
+bool isClimbRight = false;
+
 int GetCommand() {
   if (Serial.available() > 0) {
     char c = Serial.read();
@@ -113,22 +116,26 @@ void ProcessCommand() {
 
       case RIO_msgs_enum::CLIMBLEFTTRUE:
         Serial.println("9,8, climber left on command received");
-        partialLighting(greenReady, 1, 37, 75);
+        isClimbLeft = true;
+        climberHalves(greenReady, off, 37, 75, isClimbLeft, isClimbRight);
         break;
 
       case RIO_msgs_enum::CLIMBLEFTFALSE:
         Serial.println("9,9, climber left off command received");
-        partialLighting(off, 1, 37, 75);
+        isClimbLeft = false;
+        climberHalves(greenReady, off, 37, 75, isClimbLeft, isClimbRight);
         break;
 
       case RIO_msgs_enum::CLIMBRIGHTTRUE:
         Serial.println("9,10, climber right on command received");
-        partialLighting(greenReady, 38, 75, 75);
+        isClimbRight = true;
+        climberHalves(greenReady, off, 37, 75, isClimbLeft, isClimbRight);
         break;
 
       case RIO_msgs_enum::CLIMBRIGHTFALSE:
         Serial.println("9,11, climber right off command received");
-        partialLighting(off, 38, 75, 75);
+        isClimbRight = false;
+        climberHalves(greenReady, off, 37, 75, isClimbLeft, isClimbRight);
         break;
 
 
@@ -454,6 +461,32 @@ void partialLighting( uint32_t color, int startPos, int endPos, int wait){
     delay(wait);
   }
 }
+
+//after some testing, updated climber LED function
+
+void climberHalves(uint32_t color, uint32_t falseColor, int halfway, int wait, bool left, bool right){
+  while(!newCommand){
+    if((left) && (right)){
+      colorWipe(color, 10);
+    }
+    else if(left){
+      partialLighting(color, 0, halfway, 75);
+    }
+    else if(right){
+      partialLighting(color, (halfway + 1), LED_COUNT, 75);
+    }
+    else if((!left) && (!right)){
+      colorWipe(falseColor, 75);
+    }
+
+    if (GetCommand()) {
+      newCommand = true;
+      break;
+    }
+    delay(wait);
+  }
+}
+
 
 void Breathing(int wait, uint32_t colorOne, int bpm, int currentBrightness) {
   int direction = -1;  // Start by dimming (-1), will switch to brightening (+1)
