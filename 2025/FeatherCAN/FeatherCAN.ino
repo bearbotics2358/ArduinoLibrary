@@ -97,6 +97,8 @@ Adafruit_VL53L1X vl53[] = {
 #define NUMPIXELS 2 // Number of LEDs in strip
 #define NEO_PIN 9 // NOTE: will have to confirm
 
+#define SENSOR_POWER_CONTROL 6 // Think this one is available
+
 // CAN variables
 unsigned long t_prev = 0;  // Variable to store last execution time
 const unsigned int t_intvl = 10;  // Transmit interval in milliseconds
@@ -156,8 +158,37 @@ void CAN_setup() {
   // reset CAN chip
   digitalWrite(CAN0_RST, 0);
   delay(100);
+
+  // feed the watchdog
+  wdt_reset(); 
+
   digitalWrite(CAN0_RST, 1);
-  delay(500);  
+  // delay(500);  
+  delay(100);
+
+  // feed the watchdog
+  wdt_reset(); 
+
+  delay(100);
+
+  // feed the watchdog
+  wdt_reset(); 
+
+  delay(100);
+
+  // feed the watchdog
+  wdt_reset(); 
+
+  delay(100);
+
+  // feed the watchdog
+  wdt_reset(); 
+
+  delay(100);
+
+  // feed the watchdog
+  wdt_reset(); 
+
 
   // Initialize MCP25625 running at 16MHz with a baudrate of 1Mb/s and
   // the masks and filters disabled.
@@ -201,7 +232,11 @@ void Color_sensor_setup() {
         while(!cs[i].CheckDeviceID()) {
           Serial.print("Device ID NOT ok for device ");
           Serial.println(i);
-          delay(1000);
+          delay(100);
+
+          // feed the watchdog
+          wdt_reset(); 
+
           j++;
           if(j >= 5) {
             proximity_sensor_exists[i] = 0;          
@@ -215,15 +250,24 @@ void Color_sensor_setup() {
         Serial.println("Before InitializeDevice");
         cs[i].InitializeDevice();
   
+        // feed the watchdog
+        wdt_reset(); 
+
         Serial.println("Before Configure IR LED");
         // Configure IR LED
         cs[i].ConfigureProximitySensorLED(
           rev::ColorSensorV3::LEDPulseFrequency::k100kHz, rev::ColorSensorV3::LEDCurrent::kPulse100mA, 128);
   
+        // feed the watchdog
+        wdt_reset(); 
+      
         Serial.print("MainCtrl after Initialize: 0x");
         cs[i].Read(rev::ColorSensorV3::Register::kMainCtrl, 1, data);
         Serial.println(data[0], HEX);
     
+        // feed the watchdog
+        wdt_reset(); 
+
         // Clear the reset flag
         Serial.print("HasReset(): ");
         Serial.println(cs[i].HasReset());
@@ -253,7 +297,11 @@ void Color_sensor_setup() {
         while(!cs[i].CheckDeviceID()) {
           Serial.print("Device ID NOT ok for device ");
           Serial.println(i);
-          delay(1000);
+          delay(100);
+
+          // feed the watchdog
+          wdt_reset(); 
+
           j++;
           if(j >= 5) {
             proximity_sensor_exists[i] = 0;          
@@ -267,15 +315,24 @@ void Color_sensor_setup() {
         Serial.println("Before InitializeDevice");
         cs[i].InitializeDevice();
   
+        // feed the watchdog
+        wdt_reset(); 
+
         Serial.println("Before Configure IR LED");
         // Configure IR LED
         cs[i].ConfigureProximitySensorLED(
           rev::ColorSensorV3::LEDPulseFrequency::k100kHz, rev::ColorSensorV3::LEDCurrent::kPulse100mA, 128);
   
+        // feed the watchdog
+        wdt_reset(); 
+
         Serial.print("MainCtrl after Initialize: 0x");
         cs[i].Read(rev::ColorSensorV3::Register::kMainCtrl, 1, data);
         Serial.println(data[0], HEX);
     
+        // feed the watchdog
+        wdt_reset(); 
+
         // Clear the reset flag
         Serial.print("HasReset(): ");
         Serial.println(cs[i].HasReset());
@@ -296,6 +353,7 @@ void Color_sensor_loop()
   uint32_t blue_ch = 0;
   uint8_t index = 0;
   int i;
+  uint32_t status_count = 0;
   
   for(i = 0; i < conf[board].color_sensor_qty; i++) {
     if(proximity_sensor_exists[i]) {
@@ -309,8 +367,15 @@ void Color_sensor_loop()
         cs[i].Read(rev::ColorSensorV3::Register::kMainStatus, 1, data);
         status = data[0];
         
-        // Serial.print("\nMainStatus: 0x");
-        // Serial.print(status, HEX);
+        /*
+        if((status_count % 10) == 0) {
+          Serial.println();
+          Serial.print(status_count);
+          Serial.print("  Color Sensor MainStatus: 0x");
+          Serial.println(status, HEX);
+        }
+        status_count++;
+        */
         delay(10);
   
   // is a test needed here to bail after a certain time?
@@ -422,13 +487,18 @@ void TOF_sensor_setup() {
         Serial.println(conf[board].TOF_bus[i]);
         // delay(10000);
 
-        
+        // feed the watchdog
+        wdt_reset(); 
+
         if(conf[board].TOF_bus[i] == 1) {
           ret = vl53[i].begin(0x29, &Wire);
         } else if(conf[board].TOF_bus[i] == 2) {
           ret = vl53[i].begin(0x29, &myWire);
         }
         
+        // feed the watchdog
+        wdt_reset(); 
+
         if(!ret) {
           Serial.print(F("Error on init of VL sensor: "));
           Serial.println(vl53[i].vl_status);
@@ -453,6 +523,9 @@ void TOF_sensor_setup() {
           while (1)       delay(10);
         }
         Serial.println(F("Ranging started"));
+
+        // feed the watchdog
+        wdt_reset(); 
       
         // Valid timing budgets: 15, 20, 33, 50, 100, 200 and 500ms!
         vl53[i].setTimingBudget(50);
@@ -476,13 +549,18 @@ void TOF_sensor_setup() {
         Serial.println(conf[board].TOF_bus[i]);
         // delay(10000);
 
-        
+        // feed the watchdog
+        wdt_reset(); 
+
         if(conf[board].mux_bus == 1) {
           ret = vl53[i].begin(0x29, &Wire);
         } else if(conf[board].mux_bus == 2) {
           ret = vl53[i].begin(0x29, &myWire);
         }
         
+        // feed the watchdog
+        wdt_reset(); 
+
         if(!ret) {
           Serial.print(F("Error on init of VL sensor: "));
           Serial.println(vl53[i].vl_status);
@@ -508,6 +586,9 @@ void TOF_sensor_setup() {
         }
         Serial.println(F("Ranging started"));
       
+        // feed the watchdog
+        wdt_reset(); 
+
         // Valid timing budgets: 15, 20, 33, 50, 100, 200 and 500ms!
         vl53[i].setTimingBudget(50);
         Serial.print(F("Timing budget (ms): "));
@@ -515,6 +596,10 @@ void TOF_sensor_setup() {
       }
     }
   }
+
+  // feed the watchdog
+  wdt_reset(); 
+
 }
 
 void TOF_sensor_loop() {
@@ -583,12 +668,27 @@ void setup() {
   // wait for serial port connection
   // while(!Serial);
 
+  // cycle power to sensors
+  pinMode(SENSOR_POWER_CONTROL, OUTPUT);
+  digitalWrite(SENSOR_POWER_CONTROL, 1); // Power OFF
+  delay(100);
+  digitalWrite(SENSOR_POWER_CONTROL, 0); // Power ON
+  
   // declare the ledPin as an OUTPUT:
   pinMode(ledPin, OUTPUT);
 
   // delay(5000);
 
-  Serial.println("in setup ...");
+  // start watchdog timer
+  // CORAL with a Color Sensor in Proximity mode and ALGAE w/a TOF sensor both seem ok w/128 ms in setup()
+  // with sprinklings of wdt_reset() in the setup() routines
+  // Initialze WDT with a 256 msec. timeout
+  wdt_init ( WDT_CONFIG_PER_256 );
+  
+  Serial.println();
+  Serial.println("Sensors to CAN");
+  
+  Serial.println("in setup - watchdog running ...");
 
   digitalWrite(ledPin, 1);
   
@@ -596,9 +696,14 @@ void setup() {
   // Wire.setTimeout(5);
   // Wire.setClock(10000);
 
+  // feed the watchdog
+  wdt_reset(); 
 
   myWire.begin();
   // myWire.setTimeout(5);
+
+  // feed the watchdog
+  wdt_reset(); 
 
   // Assign pins A3 & A4 to SERCOM functionality for 2nd I2C bus
   pinPeripheral(A3, PIO_SERCOM_ALT);
@@ -609,18 +714,19 @@ void setup() {
   // can change in the future to look at the RESET cause and only do WHITE if
   // watchdog caused the reset
   strip.begin(); 
-  // LEDs RED at powerup, until board is discovered
+  // LEDs WHITE at powerup
   for(i = 0; i < NUMPIXELS; i++) {
     strip.setPixelColor(i, 0x00ffffff);      
   }
   strip.show();                     // Refresh strip
 
+  // feed the watchdog
+  wdt_reset(); 
+
 	// Init Thru Bore Encoder if appropriate
 
 	// Init CAN
   CAN_setup();
-  
-  Serial.println("REV Encoder test to CAN");
   
   // delay(500);
 
@@ -660,10 +766,17 @@ void setup() {
   Serial.print("Board config: ");
   Serial.println(board);
 
+  // feed the watchdog
+  wdt_reset(); 
+
   // Handle any Color Sensors
   if(conf[board].color_sensor_qty) {
     Color_sensor_setup();
   }
+
+
+  // feed the watchdog
+  wdt_reset(); 
 
   Serial.println("about to check TOF");
   // delay(1000);
@@ -734,7 +847,8 @@ void setup() {
 
 
 
-
+  // feed the watchdog
+  wdt_reset(); 
 
   // for Thru Bore Encoder
   // initialize pulse capture
@@ -755,11 +869,13 @@ void setup() {
     strip.setPixelColor(i, 0x000050);      
   }
 
+  // change watchdog timer timeout for loop()
+  wdt_disable();
   // start watchdog timer
-  // Initialze WDT with a 1 sec. timeout
-  wdt_init ( WDT_CONFIG_PER_1K );
+  // CORAL with a Color Sensor in Proximity mode and ALGAE w/a TOF sensor both seem ok w/128 ms in loop()
+  wdt_init ( WDT_CONFIG_PER_256 );
   
-
+  
 }
 
 void loop() {
@@ -954,6 +1070,9 @@ void loop() {
 
 
   // delay(2000);
+
+  // feed the watchdog
+  // wdt_reset(); 
 
   delay(10);
   tx_msg_count++;

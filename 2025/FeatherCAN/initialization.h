@@ -14,8 +14,12 @@ void initialize_config() {
   // for testing
   conf[0].type = CORAL;
   // to ignore the test unit, use the following line for serial number instead of the real one below it
-  conf[0].sn.set((uint32_t)0, (uint32_t)0, (uint32_t)0, (uint32_t)0);
+  // conf[0].sn.set((uint32_t)0, (uint32_t)0, (uint32_t)0, (uint32_t)0);
   // conf[0].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
+
+  // FeatherCAN #7
+  conf[0].sn.set((uint32_t)0xA97F72CD, (uint32_t)0x50504335, (uint32_t)0x382E3120, (uint32_t)0xFF0E2814);
+  conf[0].featherCAN = 7;
 
   conf[0].color_sensor_qty = 1;
   conf[0].color_sensor_bus[0] = 1;
@@ -28,21 +32,23 @@ void initialize_config() {
   conf[0].TOF_bus[0] = 1;
   conf[0].TOF_bus[1] = 0;
 
+  // CORAL
   conf[0].deviceId[0] = 1;
   conf[0].api[0] = 1;
   conf[0].canId[0] = 0x0a080041;
   conf[0].deviceId[1] = 0;
   conf[0].api[1] = 0;
   conf[0].canId[1] = 0;
-
-  // These were the old test values. Replaced these with the above to turn this back into the Coral board
-  // conf[0].deviceId[0] = 2;
-  // conf[0].api[0] = 2;
-  // conf[0].canId[0] = 0x0a080082;
-  // conf[0].deviceId[1] = 0;
-  // conf[0].api[1] = 0;
-  // conf[0].canId[1] = 0;
-
+  
+  /*
+  // ALGAE
+  conf[0].deviceId[0] = 2;
+  conf[0].api[0] = 2;
+  conf[0].canId[0] = 0x0a080082;
+  conf[0].deviceId[1] = 0;
+  conf[0].api[1] = 0;
+  conf[0].canId[1] = 0;
+  */
 
 // CAN ID: 0 1010 0000 1000 AAAA AAAA AADD DDDD
 
