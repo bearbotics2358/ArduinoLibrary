@@ -19,8 +19,8 @@
 
 #define DEBUG 1
 #define LED_PIN 6
-#define LED_COUNT 75
-#define MAXLEN 450
+#define LED_COUNT 91
+#define MAXLEN 546
 
 char rx_buff[MAXLEN];
 int rx_index = 0;
@@ -138,6 +138,15 @@ void ProcessCommand() {
         climberHalves(greenReady, off, 37, 75, isClimbLeft, isClimbRight);
         break;
 
+      case RIO_msgs_enum::CAMERA_RING:
+        Serial.println("9,12, camera ring on command received");
+        cameraRing(brightWhite, 75, 91, 75);
+        break;
+
+      case RIO_msgs_enum::CAMERA_RING_OFF:
+        Serial.println("9,13, camera ring off command received");
+        cameraRing(off, 75, 91, 75);
+        break;
 
       default:
         Serial.println("9,0,unknown command");
@@ -470,13 +479,13 @@ void climberHalves(uint32_t color, uint32_t falseColor, int halfway, int wait, b
       colorWipe(color, 10);
     }
     else if(left){
-      partialLighting(color, 0, halfway, 75);
+      partialLighting(color, 38, 75, wait);
     }
     else if(right){
-      partialLighting(color, (halfway + 1), LED_COUNT, 75);
+      partialLighting(color, 0, halfway, wait);
     }
     else if((!left) && (!right)){
-      colorWipe(falseColor, 75);
+      colorWipe(falseColor, 10);
     }
 
     if (GetCommand()) {
@@ -514,5 +523,19 @@ void Breathing(int wait, uint32_t colorOne, int bpm, int currentBrightness) {
       break;
     }
     delay(wait);  // Control breathing speed
+  }
+}
+
+void cameraRing(uint32_t color, int start, int end, int wait){
+  while (!newCommand){
+    for(int i = start; i < end; i++) {
+      strip.setPixelColor(i, color);
+    }
+    strip.update();
+    if (GetCommand()) {
+      newCommand = true;
+      break;
+    }
+    delay(wait);
   }
 }
