@@ -19,8 +19,8 @@
 
 #define DEBUG 1
 #define LED_PIN 6
-#define LED_COUNT 91
-#define MAXLEN 546
+#define LED_COUNT 75 // 91
+#define MAXLEN 450 // 546
 
 char rx_buff[MAXLEN];
 int rx_index = 0;
@@ -38,6 +38,7 @@ uint32_t matthewRed = strip.Color(123, 10, 3); //(52,0,0) previously
 uint32_t piss = strip.Color(190, 161, 4);
 uint32_t bearCyan = strip.Color(25, 35, 215);
 uint32_t off = strip.Color(0,0,0);
+uint32_t cameraWhite = strip.Color(0x40, 0x40, 0x40);
 
 bool newCommand = false;
 
@@ -137,16 +138,16 @@ void ProcessCommand() {
         isClimbRight = false;
         climberHalves(greenReady, off, 37, 75, isClimbLeft, isClimbRight);
         break;
-
-      case RIO_msgs_enum::CAMERA_RING:
-        Serial.println("9,12, camera ring on command received");
-        cameraRing(brightWhite, 75, 91, 75);
-        break;
-
-      case RIO_msgs_enum::CAMERA_RING_OFF:
-        Serial.println("9,13, camera ring off command received");
-        cameraRing(off, 75, 91, 75);
-        break;
+//
+//      case RIO_msgs_enum::CAMERA_RING:
+//        Serial.println("9,12, camera ring on command received");
+//        cameraRing(brightWhite, 75, 91, 75);
+//        break;
+//
+//      case RIO_msgs_enum::CAMERA_RING_OFF:
+//        Serial.println("9,13, camera ring off command received");
+//        cameraRing(off, 75, 91, 75);
+//        break;
 
       default:
         Serial.println("9,0,unknown command");
@@ -531,7 +532,7 @@ void cameraRing(uint32_t color, int start, int end, int wait){
     for(int i = start; i < end; i++) {
       strip.setPixelColor(i, color);
     }
-    strip.update();
+    strip.show();
     if (GetCommand()) {
       newCommand = true;
       break;
