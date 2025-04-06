@@ -19,8 +19,10 @@
 
 #define DEBUG 1
 #define LED_PIN 6
-#define LED_COUNT 75 // 91
-#define MAXLEN 450 // 546
+#define LED_COUNT 91
+#define MAXLEN 546
+
+int lastLEDBeforeRing = 74;
 
 char rx_buff[MAXLEN];
 int rx_index = 0;
@@ -38,12 +40,14 @@ uint32_t matthewRed = strip.Color(123, 10, 3); //(52,0,0) previously
 uint32_t piss = strip.Color(190, 161, 4);
 uint32_t bearCyan = strip.Color(25, 35, 215);
 uint32_t off = strip.Color(0,0,0);
-uint32_t cameraWhite = strip.Color(0x40, 0x40, 0x40);
+uint32_t cameraWhite = strip.Color(0x80, 0x80, 0x80);
 
 bool newCommand = false;
 
 bool isClimbLeft = false;
 bool isClimbRight = false;
+
+bool cameraOn = false;
 
 int GetCommand() {
   if (Serial.available() > 0) {
@@ -82,7 +86,7 @@ void ProcessCommand() {
     switch (msg_type) {
       case RIO_msgs_enum::MSG_IDLE:
         Serial.println("9,1,IDLE command received");
-        alternatingWipe(brightWhite, bearCyan, 1);
+        alternatingWipe(brightWhite, bearCyan, lastLEDBeforeRing, 1);
         break;
 
       case RIO_msgs_enum::NO_COMMS:
@@ -92,27 +96,27 @@ void ProcessCommand() {
 
       case RIO_msgs_enum::ELEVATOR_L1:
         Serial.println("9,3,ELEVATOR_L1 command received");
-        runningLights(matthewRed, 55);
+        runningLights(matthewRed, lastLEDBeforeRing, 55);
         break;
 
       case RIO_msgs_enum::ELEVATOR_L3_ALGAE:
         Serial.println("9,4,ELEVATOR_L3_ALGAE command received");
-        theaterChase(algaeAqua, 45);
+        theaterChase(algaeAqua, lastLEDBeforeRing, 45);
         break;
 
       case RIO_msgs_enum::ELEVATOR_L2:
         Serial.println("9,5,ELEVATOR_L2 command received");
-        radarSweep(purpleGem, 40, 3);
+        radarSweep(purpleGem, 40, lastLEDBeforeRing, 3);
         break;
 
       case RIO_msgs_enum::ELEVATOR_L3:
         Serial.println("9,6,ELEVATOR_L3 command received");
-        Breathing(100, superPink, 25, 50);
+        colorWipe(superPink, 1, lastLEDBeforeRing);
         break;
 
       case RIO_msgs_enum::IDK:
         Serial.println("9,7,IDK command received");
-        snakeAnimation(piss, 31, 12);
+        snakeAnimation(piss, 31, lastLEDBeforeRing, 12);
         break;
 
       case RIO_msgs_enum::CLIMBLEFTTRUE:
@@ -138,16 +142,18 @@ void ProcessCommand() {
         isClimbRight = false;
         climberHalves(greenReady, off, 37, 75, isClimbLeft, isClimbRight);
         break;
-//
-//      case RIO_msgs_enum::CAMERA_RING:
-//        Serial.println("9,12, camera ring on command received");
-//        cameraRing(brightWhite, 75, 91, 75);
-//        break;
-//
-//      case RIO_msgs_enum::CAMERA_RING_OFF:
-//        Serial.println("9,13, camera ring off command received");
-//        cameraRing(off, 75, 91, 75);
-//        break;
+
+      case RIO_msgs_enum::CAMERA_RING:
+        Serial.println("9,12, camera ring on command received");
+        cameraRing(cameraWhite, 75, 91, 75);
+        cameraOn = true;
+        break;
+
+      case RIO_msgs_enum::CAMERA_RING_OFF:
+        Serial.println("9,13, camera ring off command received");
+        cameraRing(off, 75, 91, 75);
+        cameraOn = false;
+        break;
 
       default:
         Serial.println("9,0,unknown command");
@@ -191,10 +197,11 @@ void loop() {
 // (as a single 'packed' 32-bit value, which you can get by calling
 // strip.Color(red, green, blue) as shown in the loop() function above),
 // and a delay time (in milliseconds) between pixels.
-void colorWipe(uint32_t color, int wait) {
+void colorWipe(uint32_t color, int wait, int endPos) {
     while (!newCommand){
-  for (int i = 0; i < strip.numPixels(); i++) {  // For each pixel in strip...
+  for (int i = 0; i <= endPos; i++) {  // For each pixel in strip...
     strip.setPixelColor(i, color);               //  Set pixel's color (in RAM)
+    updateCameraLEDs();
     strip.show();                                //  Update strip to match
          if (GetCommand()) {
       newCommand = true;
@@ -205,14 +212,15 @@ void colorWipe(uint32_t color, int wait) {
   }
 }
 
-void alternatingWipe(uint32_t color, uint32_t colorTwo, int wait) {
+void alternatingWipe(uint32_t color, uint32_t colorTwo, int endPos, int wait) {
     while (!newCommand){
-  for (int i = 0; i < strip.numPixels(); i++) {  // For each pixel in strip...
+  for (int i = 0; i <= endPos; i++) {  // For each pixel in strip until endPos...
     if (i % 2 == 0) {
       strip.setPixelColor(i, color);
     } else {
       strip.setPixelColor(i, colorTwo);
     }
+    updateCameraLEDs();
     strip.show();  //  Update strip to match
        if (GetCommand()) {
       newCommand = true;
@@ -254,6 +262,7 @@ void rainbow(int wait) {
     strip.rainbow(firstPixelHue);
     // Above line is equivalent to:
     // strip.rainbow(firstPixelHue, 1, 255, 255, true);
+    updateCameraLEDs();
     strip.show();  // Update strip with new contents
     if (GetCommand()) {
       newCommand = true;
@@ -266,21 +275,22 @@ void rainbow(int wait) {
 
 //from https://www.tweaking4all.com/hardware/arduino/adruino-led-strip-effects/#google_vignette
 
-void theaterChase(uint32_t color, int wait) {
+void theaterChase(uint32_t color, int endPos, int wait) {
   while (!newCommand){
   for (int a = 0; a < 10; a++) {   // Repeat 10 times...
     for (int b = 0; b < 3; b++) {  //  'b' counts from 0 to 2...
       strip.clear();               //   Set all pixels in RAM to 0 (off)
       // 'c' counts up from 'b' to end of strip in steps of 3...
-      for (int c = b; c < strip.numPixels(); c += 3) {
+      for (int c = b; c <= endPos; c += 3) {
         strip.setPixelColor(c, color);  // Set pixel 'c' to value 'color'
       }
         
       delay(wait);   // Pause for a moment
-       strip.show();  // Update strip with new contents
-       if (GetCommand()) {
-      newCommand = true;
-      break;
+      updateCameraLEDs();
+      strip.show();  // Update strip with new contents
+      if (GetCommand()) {
+        newCommand = true;
+        break;
      }
    
      }
@@ -373,10 +383,10 @@ void setAll(uint32_t color) {
   }
 }
 
-void runningLights(uint32_t color, int waveDelay) {
+void runningLights(uint32_t color, int endPos, int waveDelay) {
    while (!newCommand){
-  for (int j = 0; j < strip.numPixels() * 2; j++) {
-    for (int i = 0; i < strip.numPixels(); i++) {
+  for (int j = 0; j <= endPos * 2; j++) {
+    for (int i = 0; i <= endPos; i++) {
       int intensity = int((sin(i + j * 0.3) * 127 + 128) / 255.0 * 255);
       uint32_t dimmedColor = strip.Color(
         (color >> 16 & 0xFF) * intensity / 255,
@@ -385,6 +395,7 @@ void runningLights(uint32_t color, int waveDelay) {
       );
       strip.setPixelColor(i, dimmedColor);
     }
+    updateCameraLEDs();
     strip.show();
     delay(waveDelay);
     if (GetCommand()) {
@@ -394,7 +405,7 @@ void runningLights(uint32_t color, int waveDelay) {
   }
   }
 }
-void snakeAnimation(uint32_t color, int length, int delayTime) {
+void snakeAnimation(uint32_t color, int length, int endPos, int delayTime) {
   static int head = 0;              // Position of the snake head
   static int direction = 1;         // Snake moves forward (+1) or backward (-1)
 
@@ -403,7 +414,7 @@ void snakeAnimation(uint32_t color, int length, int delayTime) {
 
     // Draw the snake with a dimming tail
     for (int i = 0; i < length; i++) {
-      int pixel = (head - i * direction + LED_COUNT) % LED_COUNT;
+      int pixel = (head - i * direction + endPos) % endPos;
       
       // Calculate dimming factor for the tail
       float dimFactor = 1.0 - (float)i / length;  // Dim factor decreases from head to tail
@@ -415,10 +426,10 @@ void snakeAnimation(uint32_t color, int length, int delayTime) {
     }
 
     // Move the snake
-    head = (head + direction + LED_COUNT) % LED_COUNT;
+    head = (head + direction + endPos) % endPos;
 
     // Handle boundaries
-    if (head == LED_COUNT - 1 || head == 0) {
+    if (head == endPos - 1 || head == 0) {
       direction = -direction;  // Reverse direction at the ends
     }
 
@@ -427,31 +438,32 @@ void snakeAnimation(uint32_t color, int length, int delayTime) {
       break;
     }
 
+    updateCameraLEDs();
     strip.show();
     delay(delayTime);
   }
 }
 
-void radarSweep(uint32_t color, int length, int speed) {
+void radarSweep(uint32_t color, int length, int endPos, int speed) {
   static int position = 0;
 
   while (!newCommand) {
     strip.clear();
     for (int i = 0; i < length; i++) {
-      int pixel = (position - i + strip.numPixels()) % strip.numPixels();
+      int pixel = (position - i + endPos) % endPos;
       float dimFactor = 1.0 - (float)i / length;
       uint8_t r = ((color >> 16) & 0xFF) * dimFactor;
       uint8_t g = ((color >> 8) & 0xFF) * dimFactor;
       uint8_t b = (color & 0xFF) * dimFactor;
       strip.setPixelColor(pixel, strip.Color(r, g, b));
     }
-
+    updateCameraLEDs();
     strip.show();
      if (GetCommand()) {
       newCommand = true;
       break;
      }
-    position = (position + 1) % strip.numPixels();  // Move the sweep
+    position = (position + 1) % endPos;  // Move the sweep
     delay(speed);
   }
 }
@@ -461,7 +473,7 @@ void partialLighting( uint32_t color, int startPos, int endPos, int wait){
   for (int i = startPos; i <= endPos; i++){
     strip.setPixelColor(i, color);
     }
-
+    updateCameraLEDs();
     strip.show();
     if (GetCommand()) {
       newCommand = true;
@@ -477,16 +489,16 @@ void partialLighting( uint32_t color, int startPos, int endPos, int wait){
 void climberHalves(uint32_t color, uint32_t falseColor, int halfway, int wait, bool left, bool right){
   while(!newCommand){
     if((left) && (right)){
-      colorWipe(color, 10);
+      colorWipe(color, 10, lastLEDBeforeRing);
     }
     else if(left){
-      partialLighting(color, 38, 75, wait);
+      partialLighting(color, 38, lastLEDBeforeRing, wait);
     }
     else if(right){
       partialLighting(color, 0, halfway, wait);
     }
     else if((!left) && (!right)){
-      colorWipe(falseColor, 10);
+      colorWipe(falseColor, 10, lastLEDBeforeRing);
     }
 
     if (GetCommand()) {
@@ -498,7 +510,7 @@ void climberHalves(uint32_t color, uint32_t falseColor, int halfway, int wait, b
 }
 
 
-void Breathing(int wait, uint32_t colorOne, int bpm, int currentBrightness) {
+void Breathing(int wait, uint32_t colorOne, int endPos, int bpm, int currentBrightness) {
   int direction = -1;  // Start by dimming (-1), will switch to brightening (+1)
 
   while (!newCommand) {  // Infinite loop for continuous breathing
@@ -514,10 +526,11 @@ void Breathing(int wait, uint32_t colorOne, int bpm, int currentBrightness) {
       direction = -1; // Switch to decreasing brightness
     }
     // Apply brightness and color to the entire strip
-    strip.setBrightness(currentBrightness);
-    for (int i = 0; i < strip.numPixels(); i++) {
+    // strip.setBrightness(currentBrightness);
+    for (int i = 0; i <= endPos; i++) {
       strip.setPixelColor(i, colorOne);
     }
+    updateCameraLEDs();
     strip.show();
     if (GetCommand()) {
       newCommand = true;
@@ -538,5 +551,18 @@ void cameraRing(uint32_t color, int start, int end, int wait){
       break;
     }
     delay(wait);
+  }
+}
+
+void updateCameraLEDs(){
+  if(cameraOn){
+    for(int i = 75; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, cameraWhite);
+    }
+  }
+  else if (!cameraOn){
+    for(int i = 75; i < strip.numPixels(); i++) {
+      strip.setPixelColor(i, off);
+    } 
   }
 }
