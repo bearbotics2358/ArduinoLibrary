@@ -6,6 +6,7 @@
 #include <seesaw_neopixel.h>
 #include "Adafruit_TinyUSB.h"
 
+
 #define DEFAULT_I2C_ADDR 0x3A
 #define BOARD_2_ADDR 0x3B
 #define BOARD_3_ADDR 0x3C
@@ -20,6 +21,9 @@
 #define PWM2 13     // PC01
 #define PWM3 0      // PA04
 #define PWM4 1      // PA05
+
+#define WATCHDOG_TIMEOUT 500 // timeout in milliseconds
+//lowest value I tried that worked was a 400 millisecond timeout, added an extra 100 milliseconds for margins of errors in setup.
 
 // HID report descriptor using TinyUSB's template
 // Single Report (no ID) descriptor
@@ -51,14 +55,28 @@ const bool activeButtons[NUMBER_OF_BUTTONS] = {
 };
 
 void setup() {
+  // start watchdog timer
+  // with sprinklings of wdt_reset() in the setup() routines
+  // Initialze WDT with a 256 msec. timeout
+ rp2040.wdt_begin(WATCHDOG_TIMEOUT);
+  
+
   #if defined(ARDUINO_ARCH_MBED) && defined(ARDUINO_ARCH_RP2040)
   TinyUSB_Device_Init(0);
   #endif
 
   while(!usb_hid.begin()){
-    delay(5000);
+    // delay(5000);
+    for(int i = 0; i < 50; i++ ){
+      //feed watchdog
+      rp2040.wdt_reset();
+      delay(100);
+    }
+    // feed watchdog
+    rp2040.wdt_reset();
     usb_hid.begin();
   }
+
 
   while (!TinyUSBDevice.mounted()) delay(1);
 
@@ -74,7 +92,17 @@ void setup() {
     while(1) delay(10);
   }
 
-  delay(2000);
+  // feed watchdog
+  rp2040.wdt_reset();
+
+
+  for(int i = 0; i < 20; i++ ){
+  //feed watchdog
+  rp2040.wdt_reset();
+  delay(100);
+  }
+  // feed watchdog
+  rp2040.wdt_reset();
 
   uint16_t pid;
   uint8_t year, mon, day;
@@ -88,11 +116,17 @@ void setup() {
     ss[i].pinMode(SWITCH2, INPUT_PULLUP);
     ss[i].pinMode(SWITCH3, INPUT_PULLUP);
     ss[i].pinMode(SWITCH4, INPUT_PULLUP);
+    // pinModeBulk later when reliable
     ss[i].analogWrite(PWM1, 0);
     ss[i].analogWrite(PWM2, 0);
     ss[i].analogWrite(PWM3, 0);
     ss[i].analogWrite(PWM4, 0);
+    // feed watchdog
+    rp2040.wdt_reset();
     usb_hid.ready();
+
+    // feed watchdog
+    rp2040.wdt_reset();
   }
 
   // Initialize button states to all off
@@ -117,6 +151,9 @@ void updateButtonStates(int buttonIndex) {
 // Function to update LEDs based on buttonStates array and activeButtons
 void updateLEDs() {
   for (int i = 0; i < NUM_BOARDS; i++) {
+    // feed watchdog
+    rp2040.wdt_reset();
+
     int boardBaseIndex = i * 4;
     if (boardBaseIndex + 3 < NUMBER_OF_BUTTONS) {
       ss[i].analogWrite(PWM1, (activeButtons[boardBaseIndex] && buttonStates[boardBaseIndex]) ? BUTTON_BRIGHTNESS : 0);
@@ -125,9 +162,14 @@ void updateLEDs() {
       ss[i].analogWrite(PWM4, (activeButtons[boardBaseIndex + 3] && buttonStates[boardBaseIndex + 3]) ? BUTTON_BRIGHTNESS : 0);
     }
   }
+  // feed watchdog
+  rp2040.wdt_reset();
 }
 
 void loop() {
+  //feed watchdog
+  rp2040.wdt_reset();
+
   // Reset buttons
   gp.x = 0;
   gp.y = 0;
@@ -160,8 +202,12 @@ void loop() {
       updateButtonStates(boardBaseIndex + 3);
       gp.buttons |= (1U << (boardBaseIndex + 3));
     }
+    // feed watchdog
+    rp2040.wdt_reset();
   }
 
   updateLEDs(); // Update LEDs based on the buttonStates array and activeButtons
   usb_hid.sendReport(0, &gp, sizeof(gp));
+  // feed watchdog
+  rp2040.wdt_reset();
 }
